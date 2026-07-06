@@ -11,20 +11,24 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup Environment
+      - name: Setup Environment (ZSign Build from Source)
         run: |
           sudo apt-get update
-          sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick
-          wget https://github.com/zhlynn/zsign/releases/download/v1.1/zsign_linux_amd64.zip
-          unzip zsign_linux_amd64.zip
+          sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick build-essential
+          
+          # بناء ZSign من الصفر لتجنب مشاكل الروابط الميتة
+          git clone https://github.com/zhlynn/zsign.git
+          cd zsign
+          g++ *.cpp common/*.cpp openssl/*.cpp -lcrypto -O3 -o zsign
           chmod +x zsign
           sudo mv zsign /usr/local/bin/
+          cd ..
 
       - name: Download Raw IPA & Custom Icon
         run: |
           APP_NAME="${{ github.event.client_payload.app_name }}"
           
-          # 1. روابط الـ IPA الخام المباشرة الخاصة بـ IPA BLACK
+          # 1. روابط الـ IPA الخام المباشرة الخاصة بـ IPA BLACK من قسم Releases
           if [ "$APP_NAME" == "ESign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa";
           elif [ "$APP_NAME" == "KSign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa";
           elif [ "$APP_NAME" == "Feather" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa";
@@ -34,7 +38,7 @@ jobs:
           echo "Downloading $APP_NAME IPA..."
           curl -L -o raw_app.ipa "$IPA_URL"
           
-          # 2. روابط الأيقونات المخصصة
+          # 2. روابط الأيقونات المخصصة (JPEG)
           if [ "$APP_NAME" == "ESign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
           elif [ "$APP_NAME" == "KSign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
           elif [ "$APP_NAME" == "Scarlet" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
@@ -57,11 +61,12 @@ jobs:
           unzip -q raw_app.ipa -d extracted
           APP_DIR=$(ls -d extracted/Payload/*.app)
           
-          # زرع أيقونة التطبيق الجديدة داخل مجلده الأساسي بصيغة PNG
+          # تحويل الصورة من JPEG إلى PNG وزرعها داخل مجلد التطبيق
+          echo "Converting and injecting custom icon..."
           convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
           
           echo "Modifying Info.plist..."
-          # سكربت بايثون لتعديل Info.plist وسحب Bundle ID
+          # سكربت بايثون لتعديل Info.plist لاستخدام الصورة الجديدة وسحب Bundle ID
           python3 -c "
           import plistlib, glob, os
           app_dirs = glob.glob('extracted/Payload/*.app')
@@ -72,9 +77,12 @@ jobs:
                   with open(plist_path, 'rb') as f:
                       pl = plistlib.load(f)
                   print(pl.get('CFBundleIdentifier', 'com.ipablack.$APP_NAME'))
+                  
+                  # إجبار التطبيق على استخدام أيقونة IPA BLACK المحولة
                   pl['CFBundleIcons'] = {'CFBundlePrimaryIcon': {'CFBundleIconFiles': ['CustomIpaBlackIcon'], 'UIPrerenderedIcon': True}}
                   if 'CFBundleIcons~ipad' in pl:
                       pl['CFBundleIcons~ipad'] = pl['CFBundleIcons']
+                      
                   with open(plist_path, 'wb') as f:
                       plistlib.dump(pl, f)
               except Exception as e:
@@ -94,7 +102,6 @@ jobs:
           fi
           
           echo "Repacking IPA..."
-          # إعادة التجميع
           cd extracted
           zip -qr ../ready_to_sign.ipa Payload
           cd ..
