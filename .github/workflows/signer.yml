@@ -17,18 +17,17 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick build-essential
 
-          git clone https://github.com/khcrysalis/Zsign-Package.git
-          cd Zsign-Package
-
-          git checkout 6ffe703df73ef9069adacdbb19d571f11a69a801
+          echo "Cloning original ZSign repository..."
+          # استخدام المستودع الأصلي المطابق لأمر البناء لتفادي فقدان الملفات
+          git clone https://github.com/zhlynn/zsign.git
+          cd zsign
 
           echo "Building zsign from source..."
-          # استخدام المسارات المباشرة لضمان بناء ZSign بدون أخطاء xargs
           g++ *.cpp common/*.cpp openssl/*.cpp -lcrypto -O3 -o zsign
 
           chmod +x zsign
           sudo mv zsign /usr/local/bin/
-          zsign --version || echo "zsign installed successfully"
+          zsign -v
           cd ..
 
       - name: Download Raw IPA & Custom Icon
@@ -77,7 +76,6 @@ jobs:
 
           convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
 
-          # كتابة البايثون بهذا الشكل تمنع أخطاء الـ Syntax الخاصة بـ Bash داخل الـ YAML
           python3 -c '
           import plistlib, glob, os
           app_name = os.environ.get("APP_NAME", "unknown")
