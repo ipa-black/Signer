@@ -9,106 +9,119 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Environment (Build ZSign from source)
         run: |
+          set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick build-essential
-          
-          # استنساخ المستودع الذي اخترته
+
           git clone https://github.com/khcrysalis/Zsign-Package.git
           cd Zsign-Package
-          
-          # تحديد النسخة المطلوبة بدقة
+
           git checkout 6ffe703df73ef9069adacdbb19d571f11a69a801
-          
-          # بناء الأداة برمجياً لتجنب مشكلة الملف المفقود (وهذا ما سيحل الخطأ الأخير)
+
           echo "Building zsign from source..."
+          # استخدام المسارات المباشرة لضمان بناء ZSign بدون أخطاء xargs
           g++ *.cpp common/*.cpp openssl/*.cpp -lcrypto -O3 -o zsign
-          
-          # إعطاء الصلاحية ونقل الأداة
+
           chmod +x zsign
           sudo mv zsign /usr/local/bin/
+          zsign --version || echo "zsign installed successfully"
           cd ..
 
       - name: Download Raw IPA & Custom Icon
+        env:
+          APP_NAME: ${{ github.event.client_payload.app_name }}
         run: |
-          APP_NAME="${{ github.event.client_payload.app_name }}"
-          
+          set -euo pipefail
+          IPA_URL=""
+          ICON_URL=""
+
           # 1. روابط الـ IPA الخام
-          if [ "$APP_NAME" == "ESign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa";
-          elif [ "$APP_NAME" == "KSign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa";
-          elif [ "$APP_NAME" == "Feather" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa";
-          elif [ "$APP_NAME" == "Scarlet" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa";
-          elif [ "$APP_NAME" == "GBox" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"; fi
-          
-          curl -L -o raw_app.ipa "$IPA_URL"
-          
+          if [[ "$APP_NAME" == "ESign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa";
+          elif [[ "$APP_NAME" == "KSign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa";
+          elif [[ "$APP_NAME" == "Feather" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa";
+          elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa";
+          elif [[ "$APP_NAME" == "GBox" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"; fi
+
+          if [[ -z "$IPA_URL" ]]; then echo "Error: Unknown APP_NAME: $APP_NAME"; exit 1; fi
+          curl -L --fail -o raw_app.ipa "$IPA_URL"
+
           # 2. روابط الأيقونات المخصصة
-          if [ "$APP_NAME" == "ESign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
-          elif [ "$APP_NAME" == "KSign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
-          elif [ "$APP_NAME" == "Scarlet" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
-          elif [ "$APP_NAME" == "GBox" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg";
-          elif [ "$APP_NAME" == "Feather" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg"; fi
-          
-          curl -L -o downloaded_icon.jpeg "$ICON_URL"
+          if [[ "$APP_NAME" == "ESign" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
+          elif [[ "$APP_NAME" == "KSign" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
+          elif [[ "$APP_NAME" == "Scarlet" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
+          elif [[ "$APP_NAME" == "GBox" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg";
+          elif [[ "$APP_NAME" == "Feather" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg"; fi
+
+          if [[ -z "$ICON_URL" ]]; then echo "Error: ICON_URL not set for APP_NAME: $APP_NAME"; exit 1; fi
+          curl -L --fail -o downloaded_icon.jpeg "$ICON_URL"
 
       - name: Inject Icon, Certificates & Extract Bundle ID
+        env:
+          APP_NAME: ${{ github.event.client_payload.app_name }}
+          PASSWORD: ${{ github.event.client_payload.password }}
+          P12_BASE64: ${{ github.event.client_payload.p12_base64 }}
+          PROV_BASE64: ${{ github.event.client_payload.prov_base64 }}
         run: |
-          APP_NAME="${{ github.event.client_payload.app_name }}"
-          PASSWORD="${{ github.event.client_payload.password }}"
-          
-          echo "${{ github.event.client_payload.p12_base64 }}" | base64 -d > cert.p12
-          echo "${{ github.event.client_payload.prov_base64 }}" | base64 -d > profile.mobileprovision
-          
+          set -euo pipefail
+          echo "$P12_BASE64" | base64 -d > cert.p12
+          echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
+
           unzip -q raw_app.ipa -d extracted
-          APP_DIR=$(ls -d extracted/Payload/*.app)
           
+          # استخراج مسار التطبيق بطريقة آمنة لتجنب أخطاء المسافات
+          APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" | head -n 1)
+
           convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
-          
-          python3 -c "
+
+          # كتابة البايثون بهذا الشكل تمنع أخطاء الـ Syntax الخاصة بـ Bash داخل الـ YAML
+          python3 -c '
           import plistlib, glob, os
-          app_dirs = glob.glob('extracted/Payload/*.app')
+          app_name = os.environ.get("APP_NAME", "unknown")
+          app_dirs = glob.glob("extracted/Payload/*.app")
           if app_dirs:
               app_dir = app_dirs[0]
-              plist_path = os.path.join(app_dir, 'Info.plist')
+              plist_path = os.path.join(app_dir, "Info.plist")
               try:
-                  with open(plist_path, 'rb') as f:
+                  with open(plist_path, "rb") as f:
                       pl = plistlib.load(f)
-                  print(pl.get('CFBundleIdentifier', 'com.ipablack.$APP_NAME'))
-                  pl['CFBundleIcons'] = {'CFBundlePrimaryIcon': {'CFBundleIconFiles': ['CustomIpaBlackIcon'], 'UIPrerenderedIcon': True}}
-                  if 'CFBundleIcons~ipad' in pl:
-                      pl['CFBundleIcons~ipad'] = pl['CFBundleIcons']
-                  with open(plist_path, 'wb') as f:
-                      plistlib.dump(pl, f)
+                  print(pl.get("CFBundleIdentifier", f"com.ipablack.{app_name}"))
+                  pl["CFBundleIcons"] = {"CFBundlePrimaryIcon": {"CFBundleIconFiles": ["CustomIpaBlackIcon"], "UIPrerenderedIcon": True}}
+                  if "CFBundleIcons~ipad" in pl:
+                      pl["CFBundleIcons~ipad"] = pl["CFBundleIcons"]
+                  with open(plist_path, "wb") as f:
+                          plistlib.dump(pl, f)
               except Exception as e:
-                  print('com.ipablack.$APP_NAME')
+                  print(f"com.ipablack.{app_name}")
           else:
-              print('com.ipablack.$APP_NAME')
-          " > bundle_id.txt
-          
-          if [ "$APP_NAME" == "Feather" ] || [ "$APP_NAME" == "KSign" ]; then
+              print(f"com.ipablack.{app_name}")
+          ' > bundle_id.txt
+
+          if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
             ASSETS_DIR="$APP_DIR/signing-assets/PremiumCert"
             mkdir -p "$ASSETS_DIR"
             cp cert.p12 "$ASSETS_DIR/cert.p12"
             cp profile.mobileprovision "$ASSETS_DIR/cert.mobileprovision"
             echo "$PASSWORD" > "$ASSETS_DIR/cert.txt"
           fi
-          
+
           cd extracted
           zip -qr ../ready_to_sign.ipa Payload
           cd ..
 
       - name: Sign IPA with ZSign
+        env:
+          APP_NAME: ${{ github.event.client_payload.app_name }}
+          PASSWORD: ${{ github.event.client_payload.password }}
         run: |
-          APP_NAME="${{ github.event.client_payload.app_name }}"
-          PASSWORD="${{ github.event.client_payload.password }}"
-          
-          zsign -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o ${APP_NAME}_signed.ipa ready_to_sign.ipa
+          set -euo pipefail
+          zsign -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
 
       - name: Upload to Secure Storage
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.event.client_payload.build_id }}
           name: "Cloud Build ${{ github.event.client_payload.build_id }}"
