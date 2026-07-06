@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>IPA BLACK | Premium Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root { 
+            --accent: #ffffff; 
+            --accent-dim: #a0a0a0; 
+            --accent-dark: #333333; 
+            --black: #000000; 
+        }
+        
+        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: #ffffff; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100dvh; margin: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+        
+        #stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
+        .star { position: absolute; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px rgba(255, 255, 255, 0.8); animation: twinkle var(--twinkle-duration) infinite alternate ease-in-out, drift var(--drift-duration) infinite linear; }
+        @keyframes twinkle { 0% { opacity: 0.1; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1.2); } }
+        @keyframes drift { from { transform: translateY(100vh); } to { transform: translateY(-10vh); } }
+
+        .liquid-blob { position: absolute; filter: blur(70px); z-index: 0; opacity: 0.3; animation: liquid-morph 12s infinite ease-in-out alternate; transition: all 0.5s ease; }
+        .blob-1 { width: 80vw; height: 80vw; max-width: 400px; max-height: 400px; background: linear-gradient(135deg, #444, #fff); top: -10%; right: -20%; }
+        .blob-2 { width: 70vw; height: 70vw; max-width: 350px; max-height: 350px; background: linear-gradient(135deg, #111, #888); bottom: -10%; left: -20%; animation-delay: -5s; animation-direction: alternate-reverse; }
+        @keyframes liquid-morph { 0% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(0, 0) rotate(0deg) scale(1); } 50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: translate(-20px, 30px) rotate(45deg) scale(1.1); } 100% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(20px, -20px) rotate(90deg) scale(0.9); } }
+
+        .glass-mobile-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(40px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 40px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 1px 15px rgba(255, 255, 255, 0.03); padding: 2rem 1.5rem; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1.2rem; }
+        
+        .custom-select { position: relative; }
+        .select-selected { background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8); cursor: pointer; transition: 0.3s; }
+        .select-items { position: absolute; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; top: calc(100% + 8px); left: 0; right: 0; z-index: 99; display: none; max-height: 220px; overflow-y: auto; }
+        .select-items div { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; cursor: pointer; }
+        .select-items img, .select-selected img { width: 32px; height: 32px; border-radius: 8px; background: transparent; object-fit: cover; }
+
+        .upload-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.3); border-radius: 20px; padding: 12px 16px; transition: 0.3s; cursor: pointer; }
+        .upload-text { display: flex; flex-direction: column; text-align: right; }
+
+        .black-input { width: 60%; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 10px; color: white; text-align: center; font-size: 0.9rem; letter-spacing: 2px; outline: none; margin: 0 auto; display: block;}
+        .black-input:focus { border-color: var(--accent); }
+
+        .btn-liquid { background: linear-gradient(135deg, #111, #333, #555); background-size: 200% 200%; animation: silver-shine 3s ease infinite; color: #fff; font-weight: 900; font-size: 1.05rem; padding: 16px; border-radius: 20px; width: 100%; margin-top: 10px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); cursor: pointer; transition: 0.3s; }
+        @keyframes silver-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .install-btn { background: #fff; color: #000; border: none; display: none; text-align: center; text-decoration: none; font-weight: 900; animation: none;}
+
+        .progress-wrapper { width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 8px; overflow: hidden; display: none; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent); transition: width 0.5s ease; }
+    </style>
+</head>
+<body>
+
+    <div id="stars-container"></div>
+    <div class="liquid-blob blob-1"></div>
+    <div class="liquid-blob blob-2"></div>
+
+    <div class="glass-mobile-card">
+        <div class="text-center mb-2">
+            <h1 class="text-3xl font-black tracking-tighter" style="color: var(--accent); text-shadow: 0 0 15px rgba(255,255,255,0.3);">IPA BLACK</h1>
+            <p class="text-[11px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Secure Cloud Signer</p>
+        </div>
+
+        <form id="signForm" class="space-y-4">
+            <div class="custom-select" id="customSelect">
+                <div class="select-selected" id="selectedApp">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmZmZmIiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjQiLz48L3N2Zz4=" alt="icon">
+                    <span class="text-gray-200">حدد التطبيق للتوقيع...</span>
+                </div>
+                <div class="select-items" id="appOptions">
+                    <div data-value="ESign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg" alt="ESign">ESign</div>
+                    <div data-value="KSign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg" alt="KSign">KSign</div>
+                    <div data-value="Scarlet"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg" alt="Scarlet">Scarlet</div>
+                    <div data-value="GBox"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg" alt="GBox">GBox</div>
+                    <div data-value="Feather"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg" alt="Feather">Feather</div>
+                </div>
+                <input type="hidden" id="appInput" required>
+            </div>
+
+            <div class="space-y-3">
+                <div class="upload-row" onclick="document.getElementById('p12File').click()">
+                    <div class="upload-text">
+                        <span class="text-[13px] font-bold text-gray-200">ملف P12</span>
+                        <span id="p12Name" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار الشهادة</span>
+                    </div>
+                    <input type="file" id="p12File" class="hidden" accept=".p12">
+                </div>
+                <div class="upload-row" onclick="document.getElementById('provFile').click()">
+                    <div class="upload-text">
+                        <span class="text-[13px] font-bold text-gray-200">ملف Provision</span>
+                        <span id="provName" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار التكوين</span>
+                    </div>
+                    <input type="file" id="provFile" class="hidden" accept=".mobileprovision">
+                </div>
+            </div>
+
+            <input type="password" id="password" placeholder="كلمة المرور" class="black-input" required>
+
+            <button type="submit" id="submitBtn" class="btn-liquid">بدء التوقيع السحابي</button>
+            
+            <div id="progressWrapper" class="progress-wrapper">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+
+            <button type="button" id="installBtn" class="btn-liquid install-btn">تثبيت التطبيق الآن</button>
+        </form>
+
+        <div id="status" class="mt-2 text-center text-[11px] font-bold hidden px-3 py-2 rounded-xl bg-black/50 border border-gray-700 text-gray-200"></div>
+    </div>
+
+    <script>
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 60; i++) {
+            let star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + 'vw';
+            let size = Math.random() * 2 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            star.style.setProperty('--twinkle-duration', (Math.random() * 2 + 1) + 's');
+            star.style.setProperty('--drift-duration', (Math.random() * 20 + 30) + 's');
+            star.style.animationDelay = (Math.random() * -40) + 's';
+            starsContainer.appendChild(star);
+        }
+
+        const selectedApp = document.getElementById('selectedApp');
+        const appOptions = document.getElementById('appOptions');
+        const appInput = document.getElementById('appInput');
+
+        selectedApp.onclick = e => { e.stopPropagation(); appOptions.style.display = appOptions.style.display === 'block' ? 'none' : 'block'; };
+        document.querySelectorAll('.select-items div').forEach(opt => {
+            opt.onclick = function() { selectedApp.innerHTML = this.innerHTML; appInput.value = this.getAttribute('data-value'); appOptions.style.display = 'none'; };
+        });
+        document.onclick = () => appOptions.style.display = 'none';
+
+        const truncate = (str, n) => str.length > n ? str.substr(0, n - 1) + '...' : str;
+        document.getElementById('p12File').onchange = e => { if(e.target.files[0]) document.getElementById('p12Name').innerText = truncate(e.target.files[0].name, 25); };
+        document.getElementById('provFile').onchange = e => { if(e.target.files[0]) document.getElementById('provName').innerText = truncate(e.target.files[0].name, 25); };
+
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
+        });
+
+        async function checkStatus(buildId, appName) {
+            try {
+                const res = await fetch(`/api/status?build_id=${buildId}&app=${appName}`);
+                return await res.json();
+            } catch (e) {
+                return { status: 'processing' };
+            }
+        }
+
+        let finalInstallLink = "";
+
+        document.getElementById('installBtn').addEventListener('click', () => {
+            if (finalInstallLink) {
+                window.location.href = finalInstallLink;
+                setTimeout(() => { window.location.href = "https://t.me/hl00ss"; }, 1500);
+            }
+        });
+
+        document.getElementById('signForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            const btn = document.getElementById('submitBtn');
+            const installBtn = document.getElementById('installBtn');
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressFill = document.getElementById('progressFill');
+
+            if(!appInput.value) return alert('يرجى اختيار تطبيق');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="opacity-70">جاري الرفع...</span>';
+            status.classList.remove('hidden');
+            status.innerText = 'يتم رفع الشهادات وتشفيرها...';
+
+            try {
+                const p12 = await toBase64(document.getElementById('p12File').files[0]);
+                const prov = await toBase64(document.getElementById('provFile').files[0]);
+
+                const res = await fetch('/api/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ app: appInput.value, password: document.getElementById('password').value, p12, prov })
+                });
+
+                if(!res.ok) throw new Error('Server');
+                const data = await res.json();
+                const buildId = data.build_id;
+
+                progressWrapper.style.display = 'block';
+                btn.style.display = 'none';
+                status.innerText = 'يتم فك التطبيق وحقن الشهادة...';
+                
+                let simulatedProgress = 10;
+                progressFill.style.width = simulatedProgress + '%';
+
+                const checker = setInterval(async () => {
+                    if (simulatedProgress < 90) {
+                        simulatedProgress += 5;
+                        progressFill.style.width = simulatedProgress + '%';
+                    }
+
+                    const serverStatus = await checkStatus(buildId, appInput.value);
+                    
+                    if (serverStatus.status === 'done') {
+                        clearInterval(checker);
+                        progressFill.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            progressWrapper.style.display = 'none';
+                            installBtn.style.display = 'block';
+                            
+                            const manifestApiUrl = `https://${window.location.host}/api/manifest?ipa=${encodeURIComponent(serverStatus.ipaUrl)}&bundle_url=${encodeURIComponent(serverStatus.bundleUrl)}&app=${encodeURIComponent(appInput.value)}`;
+                            finalInstallLink = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestApiUrl)}`;
+                            
+                            status.innerText = 'تم التوقيع بنجاح! التطبيق جاهز للتثبيت.';
+                            status.style.color = '#fff';
+                        }, 500); 
+                    }
+                }, 3000); 
+
+            } catch (err) {
+                status.innerText = 'حدث خطأ. يرجى المحاولة لاحقاً.';
+                status.style.color = '#ff4b4b';
+                progressWrapper.style.display = 'none';
+                btn.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = 'إعادة المحاولة';
+            }
+        };
+    </script>
+</body>
+</html>
