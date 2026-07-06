@@ -1,0 +1,119 @@
+name: Premium Cloud Signer Engine
+
+on:
+  repository_dispatch:
+    types: [trigger-sign]
+
+jobs:
+  build_and_sign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick
+          wget https://github.com/zhlynn/zsign/releases/download/v1.1/zsign_linux_amd64.zip
+          unzip zsign_linux_amd64.zip
+          chmod +x zsign
+          sudo mv zsign /usr/local/bin/
+
+      - name: Download Raw IPA & Custom Icon
+        run: |
+          APP_NAME="${{ github.event.client_payload.app_name }}"
+          
+          # 1. روابط الـ IPA الخام المباشرة الخاصة بـ IPA BLACK
+          if [ "$APP_NAME" == "ESign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa";
+          elif [ "$APP_NAME" == "KSign" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa";
+          elif [ "$APP_NAME" == "Feather" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa";
+          elif [ "$APP_NAME" == "Scarlet" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa";
+          elif [ "$APP_NAME" == "GBox" ]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"; fi
+          
+          echo "Downloading $APP_NAME IPA..."
+          curl -L -o raw_app.ipa "$IPA_URL"
+          
+          # 2. روابط الأيقونات المخصصة
+          if [ "$APP_NAME" == "ESign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
+          elif [ "$APP_NAME" == "KSign" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
+          elif [ "$APP_NAME" == "Scarlet" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
+          elif [ "$APP_NAME" == "GBox" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg";
+          elif [ "$APP_NAME" == "Feather" ]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg"; fi
+          
+          echo "Downloading Custom Icon..."
+          curl -L -o downloaded_icon.jpeg "$ICON_URL"
+
+      - name: Inject Icon, Certificates & Extract Bundle ID
+        run: |
+          APP_NAME="${{ github.event.client_payload.app_name }}"
+          PASSWORD="${{ github.event.client_payload.password }}"
+          
+          # فك تشفير الشهادات
+          echo "${{ github.event.client_payload.p12_base64 }}" | base64 -d > cert.p12
+          echo "${{ github.event.client_payload.prov_base64 }}" | base64 -d > profile.mobileprovision
+          
+          echo "Extracting IPA..."
+          unzip -q raw_app.ipa -d extracted
+          APP_DIR=$(ls -d extracted/Payload/*.app)
+          
+          # زرع أيقونة التطبيق الجديدة داخل مجلده الأساسي بصيغة PNG
+          convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
+          
+          echo "Modifying Info.plist..."
+          # سكربت بايثون لتعديل Info.plist وسحب Bundle ID
+          python3 -c "
+          import plistlib, glob, os
+          app_dirs = glob.glob('extracted/Payload/*.app')
+          if app_dirs:
+              app_dir = app_dirs[0]
+              plist_path = os.path.join(app_dir, 'Info.plist')
+              try:
+                  with open(plist_path, 'rb') as f:
+                      pl = plistlib.load(f)
+                  print(pl.get('CFBundleIdentifier', 'com.ipablack.$APP_NAME'))
+                  pl['CFBundleIcons'] = {'CFBundlePrimaryIcon': {'CFBundleIconFiles': ['CustomIpaBlackIcon'], 'UIPrerenderedIcon': True}}
+                  if 'CFBundleIcons~ipad' in pl:
+                      pl['CFBundleIcons~ipad'] = pl['CFBundleIcons']
+                  with open(plist_path, 'wb') as f:
+                      plistlib.dump(pl, f)
+              except Exception as e:
+                  print('com.ipablack.$APP_NAME')
+          else:
+              print('com.ipablack.$APP_NAME')
+          " > bundle_id.txt
+          
+          # الحقن الصامت للشهادات (Zero-Click) لـ KSign و Feather فقط
+          if [ "$APP_NAME" == "Feather" ] || [ "$APP_NAME" == "KSign" ]; then
+            echo "Injecting certificates natively into $APP_NAME..."
+            ASSETS_DIR="$APP_DIR/signing-assets/PremiumCert"
+            mkdir -p "$ASSETS_DIR"
+            cp cert.p12 "$ASSETS_DIR/cert.p12"
+            cp profile.mobileprovision "$ASSETS_DIR/cert.mobileprovision"
+            echo "$PASSWORD" > "$ASSETS_DIR/cert.txt"
+          fi
+          
+          echo "Repacking IPA..."
+          # إعادة التجميع
+          cd extracted
+          zip -qr ../ready_to_sign.ipa Payload
+          cd ..
+
+      - name: Sign IPA with ZSign
+        run: |
+          APP_NAME="${{ github.event.client_payload.app_name }}"
+          PASSWORD="${{ github.event.client_payload.password }}"
+          
+          echo "Signing $APP_NAME..."
+          zsign -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o ${APP_NAME}_signed.ipa ready_to_sign.ipa
+
+      - name: Upload to Secure Storage
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: build-${{ github.event.client_payload.build_id }}
+          name: "Cloud Build ${{ github.event.client_payload.build_id }}"
+          files: |
+            ${{ github.event.client_payload.app_name }}_signed.ipa
+            bundle_id.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
