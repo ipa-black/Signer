@@ -2,259 +2,289 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IPA BLACK | التوقيع السحابي المتميز</title>
-    <!-- استدعاء خط Cairo الأنيق -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>IPA BLACK | Premium Cloud</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* إعدادات الحماية الأساسية ومنع النسخ والتقريب */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Cairo', sans-serif;
-            background: radial-gradient(ellipse at bottom, #0d1b2a 0%, #000000 100%); /* خلفية أعماق البحر المظلمة */
-            color: #f5f5f7;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: manipulation;
-            overflow-x: hidden;
+        :root { 
+            --gold: #d4af37; 
+            --gold-light: #fceabb; 
+            --gold-dark: #8c6b14; 
+            --black: #050505; 
         }
         
-        /* تأثير النجوم الخافتة في الخلفية */
-        .stars {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #ffffff, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 40px 70px, #e0e0e0, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 50px 160px, #cccccc, rgba(0,0,0,0)),
-                radial-gradient(2px 2px at 90px 40px, #ffffff, rgba(0,0,0,0));
-            background-repeat: repeat;
-            background-size: 200px 200px;
-            z-index: -1;
-            opacity: 0.4;
-        }
-
-        /* واجهة الزجاج (Apple Glassmorphism) */
-        .container {
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 28px;
-            padding: 40px 30px;
-            width: 92%;
-            max-width: 420px;
-            text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-        }
-
-        h1 { font-weight: 800; font-size: 32px; margin-bottom: 5px; letter-spacing: 1px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-        h1 span { color: #007AFF; } /* الأزرق الخاص بـ Apple */
-        p.subtitle { font-size: 14px; color: #a1a1a6; margin-bottom: 35px; }
-
-        /* تصميم الحقول والقوائم */
-        .input-group { margin-bottom: 20px; text-align: right; }
-        .input-group label { display: block; font-size: 13px; margin-bottom: 8px; color: #d2d2d7; font-weight: 600; }
+        body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: #ffffff; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100dvh; margin: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         
-        input[type="file"], input[type="text"], select {
-            width: 100%;
-            padding: 15px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(0, 0, 0, 0.4);
-            color: #fff;
-            font-family: 'Cairo', sans-serif;
-            font-size: 14px;
-            outline: none;
-            transition: all 0.3s ease;
+        /* سماء النجوم المتحركة */
+        #stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
+        .star { 
+            position: absolute; 
+            background: var(--gold-light); 
+            border-radius: 50%; 
+            box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+            animation: twinkle var(--twinkle-duration) infinite alternate ease-in-out, drift var(--drift-duration) infinite linear;
         }
-        input[type="file"]::file-selector-button {
-            background: #2c2c2e; color: #fff; border: none; padding: 8px 16px; border-radius: 10px; margin-left: 10px; cursor: pointer; font-family: 'Cairo'; transition: 0.2s;
-        }
-        input[type="file"]::file-selector-button:hover { background: #3a3a3c; }
-        input:focus, select:focus { border-color: #007AFF; box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25); }
+        @keyframes twinkle { 0% { opacity: 0.1; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1.2); } }
+        @keyframes drift { from { transform: translateY(100vh); } to { transform: translateY(-10vh); } }
 
-        /* زر التوقيع */
-        button {
-            width: 100%;
-            background: #007AFF;
-            color: #fff;
-            border: none;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 17px;
-            font-weight: 800;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-top: 15px;
-            font-family: 'Cairo', sans-serif;
-            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-        }
-        button:active { transform: scale(0.96); box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2); }
-        button:disabled { background: #3a3a3c; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+        /* الكرات السائلة (الذهبية) */
+        .liquid-blob { position: absolute; filter: blur(60px); z-index: 1; opacity: 0.45; animation: liquid-morph 12s infinite ease-in-out alternate; transition: all 0.5s ease; }
+        .blob-1 { width: 80vw; height: 80vw; max-width: 400px; max-height: 400px; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); top: -10%; right: -20%; }
+        .blob-2 { width: 70vw; height: 70vw; max-width: 350px; max-height: 350px; background: linear-gradient(135deg, #4a3808, var(--gold-dark)); bottom: -10%; left: -20%; animation-delay: -5s; animation-direction: alternate-reverse; }
+        @keyframes liquid-morph { 0% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(0, 0) rotate(0deg) scale(1); } 50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: translate(-20px, 30px) rotate(45deg) scale(1.1); } 100% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(20px, -20px) rotate(90deg) scale(0.9); } }
 
-        /* شريط التحميل الانسيابي */
-        .progress-container { display: none; margin-top: 25px; }
-        .progress-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; position: relative; }
-        .progress-bar { width: 0%; height: 100%; background: #007AFF; border-radius: 4px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(0,122,255,0.6); }
-        .status-text { margin-top: 12px; font-size: 13px; color: #a1a1a6; font-weight: 600; transition: color 0.3s ease; }
+        /* حاوية الهاتف الزجاجية */
+        .glass-mobile-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(15, 15, 15, 0.4); backdrop-filter: blur(35px) saturate(200%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 40px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 15px rgba(255, 255, 255, 0.05), inset 0 -1px 15px rgba(212, 175, 55, 0.05); padding: 2rem 1.5rem; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1.2rem; }
+        
+        /* عناصر الواجهة */
+        .custom-select { position: relative; }
+        .select-selected { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.3s; }
+        .select-items { position: absolute; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; top: calc(100% + 8px); left: 0; right: 0; z-index: 99; display: none; max-height: 220px; overflow-y: auto; }
+        .select-items div { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; }
+        .select-items img, .select-selected img { width: 32px; height: 32px; border-radius: 8px; background: transparent; object-fit: cover; }
+
+        .upload-row { display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 12px 16px; transition: 0.3s; cursor: pointer; }
+        .upload-row:active { background: rgba(212, 175, 55, 0.15); }
+        .upload-text { display: flex; flex-direction: column; text-align: right; }
+
+        .gold-input { width: 60%; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 10px; color: white; text-align: center; font-size: 0.9rem; letter-spacing: 2px; outline: none; margin: 0 auto; display: block;}
+        .gold-input:focus { border-color: var(--gold); }
+
+        .btn-liquid { background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); background-size: 200% 200%; animation: gold-shine 3s ease infinite; color: #000; font-weight: 900; font-size: 1.05rem; padding: 16px; border-radius: 20px; width: 100%; margin-top: 10px; border: none; box-shadow: 0 10px 25px rgba(170, 137, 40, 0.4); cursor: pointer; transition: 0.3s; }
+        @keyframes gold-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .install-btn { background: #111; color: var(--gold); border: 2px solid var(--gold); display: none; text-align: center; text-decoration: none; animation: none; font-weight: 900; }
+
+        .progress-wrapper { width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 8px; overflow: hidden; display: none; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        
+        /* التعديل 1: إضافة لمعان ديناميكي للشريط يجعله يبدو كسيرفر نشط */
+        .progress-fill { 
+            width: 0%; 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold), var(--gold-dark)); 
+            background-size: 200% 100%;
+            animation: loading-shimmer 1.5s infinite linear;
+            box-shadow: 0 0 10px var(--gold); 
+            transition: width 0.3s ease-out; 
+        }
+        @keyframes loading-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
     </style>
 </head>
 <body>
 
-<!-- خلفية النجوم -->
-<div class="stars"></div>
+    <!-- سماء النجوم -->
+    <div id="stars-container"></div>
 
-<div class="container">
-    <h1>IPA <span>BLACK</span></h1>
-    <p class="subtitle">محرك التوقيع السحابي فائق السرعة</p>
+    <div class="liquid-blob blob-1"></div>
+    <div class="liquid-blob blob-2"></div>
 
-    <div class="input-group">
-        <label>التطبيق المراد توقيعه</label>
-        <select id="appSelect">
-            <option value="ESign">ESign (النسخة الرسمية)</option>
-            <option value="KSign">KSign (النسخة الرسمية)</option>
-            <option value="Feather">Feather</option>
-            <option value="Scarlet">Scarlet</option>
-            <option value="GBox">GBox</option>
-        </select>
-    </div>
-
-    <div class="input-group">
-        <label>شهادة التوقيع (.p12)</label>
-        <input type="file" id="p12File" accept=".p12" required>
-    </div>
-
-    <div class="input-group">
-        <label>ملف التكوين (.mobileprovision)</label>
-        <input type="file" id="provFile" accept=".mobileprovision" required>
-    </div>
-
-    <div class="input-group">
-        <label>كلمة مرور الشهادة</label>
-        <input type="text" id="certPassword" placeholder="اكتب كلمة المرور هنا" required autocomplete="off">
-    </div>
-
-    <button id="signBtn" onclick="startSigning()">بدء التوقيع الآن</button>
-
-    <div class="progress-container" id="progressWrapper">
-        <div class="progress-bg">
-            <div class="progress-bar" id="progressBar"></div>
+    <div class="glass-mobile-card">
+        <div class="text-center mb-2">
+            <h1 class="text-3xl font-black tracking-tighter" style="color: var(--gold); text-shadow: 0 0 15px rgba(212,175,55,0.3);">IPA BLACK</h1>
+            <p class="text-[11px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Premium Cloud Signer</p>
         </div>
-        <p class="status-text" id="statusText">جاري تهيئة المحرك...</p>
+
+        <form id="signForm" class="space-y-4">
+            <div class="custom-select" id="customSelect">
+                <div class="select-selected" id="selectedApp">
+                    <!-- أيقونة الترس الذهبية الافتراضية -->
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjQiLz48L3N2Zz4=" alt="icon">
+                    <span class="text-gray-200">حدد التطبيق للتوقيع...</span>
+                </div>
+                <div class="select-items" id="appOptions">
+                    <!-- جميع الأيقونات مكتملة ومربوطة بمستودعك -->
+                    <div data-value="ESign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg" alt="ESign">ESign</div>
+                    <div data-value="KSign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg" alt="KSign">KSign</div>
+                    <div data-value="Scarlet"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg" alt="Scarlet">Scarlet</div>
+                    <div data-value="GBox"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg" alt="GBox">GBox</div>
+                    <div data-value="Feather"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg" alt="Feather">Feather</div>
+                </div>
+                <input type="hidden" id="appInput" required>
+            </div>
+
+            <div class="space-y-3">
+                <div class="upload-row" onclick="document.getElementById('p12File').click()">
+                    <div class="upload-text">
+                        <span class="text-[13px] font-bold text-gray-200">ملف P12</span>
+                        <span id="p12Name" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار الشهادة</span>
+                    </div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <input type="file" id="p12File" class="hidden" accept=".p12">
+                </div>
+
+                <div class="upload-row" onclick="document.getElementById('provFile').click()">
+                    <div class="upload-text">
+                        <span class="text-[13px] font-bold text-gray-200">ملف Provision</span>
+                        <span id="provName" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار التكوين</span>
+                    </div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <input type="file" id="provFile" class="hidden" accept=".mobileprovision">
+                </div>
+            </div>
+
+            <input type="password" id="password" placeholder="كلمة المرور" class="gold-input">
+
+            <button type="submit" id="submitBtn" class="btn-liquid">بدء التوقيع السحابي</button>
+            
+            <div id="progressWrapper" class="progress-wrapper">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+
+            <button type="button" id="installBtn" class="btn-liquid install-btn">تثبيت التطبيق الآن</button>
+        </form>
+
+        <div id="status" class="mt-2 text-center text-[11px] font-bold hidden px-3 py-2 rounded-xl bg-black/50 border border-[var(--gold-dark)] text-[var(--gold)]"></div>
     </div>
-</div>
 
-<script>
-    // الحماية الصارمة من النسخ، الفحص، والاختصارات
-    document.addEventListener('contextmenu', event => event.preventDefault());
-    document.addEventListener('keydown', event => {
-        if (event.ctrlKey && (event.key === 'c' || event.key === 'v' || event.key === 'u' || event.key === 's' || event.key === 'p')) {
-            event.preventDefault();
-        }
-    });
-
-    // دالة تحويل الملفات إلى Base64 استعداداً لإرسالها لـ API
-    const toBase64 = file => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(',')[1]);
-        reader.onerror = error => reject(error);
-    });
-
-    async function startSigning() {
-        const appSelect = document.getElementById('appSelect').value;
-        const p12File = document.getElementById('p12File').files[0];
-        const provFile = document.getElementById('provFile').files[0];
-        const certPassword = document.getElementById('certPassword').value;
-
-        if (!p12File || !provFile || !certPassword) {
-            alert("⚠️ يرجى إرفاق الشهادة وملف التكوين وكلمة المرور للبدء!");
-            return;
-        }
-
-        const signBtn = document.getElementById('signBtn');
-        const progressWrapper = document.getElementById('progressWrapper');
-        const progressBar = document.getElementById('progressBar');
-        const statusText = document.getElementById('statusText');
-
-        signBtn.disabled = true;
-        progressWrapper.style.display = 'block';
-
-        try {
-            // الخطوة 1: تشفير الشهادات
-            statusText.innerText = "جاري تشفير الشهادات ومعالجة البيانات...";
-            progressBar.style.width = '15%';
+    <script>
+        // 1. توليد النجوم الأنيقة
+        const starsContainer = document.getElementById('stars-container');
+        for (let i = 0; i < 60; i++) {
+            let star = document.createElement('div');
+            star.className = 'star';
             
-            const p12Base64 = await toBase64(p12File);
-            const provBase64 = await toBase64(provFile);
+            star.style.left = Math.random() * 100 + 'vw';
+            
+            let size = Math.random() * 2 + 1;
+            star.style.width = size + 'px';
+            star.style.height = size + 'px';
+            
+            star.style.setProperty('--twinkle-duration', (Math.random() * 2 + 1) + 's');
+            star.style.setProperty('--drift-duration', (Math.random() * 20 + 30) + 's');
+            
+            star.style.animationDelay = (Math.random() * -40) + 's';
+            
+            starsContainer.appendChild(star);
+        }
 
-            progressBar.style.width = '35%';
-            statusText.innerText = "جاري الاتصال بمحرك التوقيع السحابي...";
+        // 2. منطق الواجهة البرمجية
+        const selectedApp = document.getElementById('selectedApp');
+        const appOptions = document.getElementById('appOptions');
+        const appInput = document.getElementById('appInput');
 
-            // الخطوة 2: إرسال الطلب لـ API (يجب أن يكون لديك ملف api/sign.js جاهز)
-            const response = await fetch('/api/sign', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    app_name: appSelect,
-                    password: certPassword,
-                    p12_base64: p12Base64,
-                    prov_base64: provBase64
-                })
-            });
+        selectedApp.onclick = e => { e.stopPropagation(); appOptions.style.display = appOptions.style.display === 'block' ? 'none' : 'block'; };
+        document.querySelectorAll('.select-items div').forEach(opt => {
+            opt.onclick = function() { selectedApp.innerHTML = this.innerHTML; appInput.value = this.getAttribute('data-value'); appOptions.style.display = 'none'; };
+        });
+        document.onclick = () => appOptions.style.display = 'none';
 
-            const result = await response.json();
+        const truncate = (str, n) => str.length > n ? str.substr(0, n - 1) + '...' : str;
+        document.getElementById('p12File').onchange = e => { if(e.target.files[0]) document.getElementById('p12Name').innerText = truncate(e.target.files[0].name, 25); };
+        document.getElementById('provFile').onchange = e => { if(e.target.files[0]) document.getElementById('provName').innerText = truncate(e.target.files[0].name, 25); };
 
-            if (!response.ok) {
-                throw new Error(result.message || "حدث خطأ في استجابة الخادم");
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader(); reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
+        });
+
+        async function checkStatus(buildId, appName) {
+            try {
+                const res = await fetch(`/api/status?build_id=${buildId}&app=${appName}`);
+                return await res.json();
+            } catch (e) {
+                return { status: 'processing' };
             }
-
-            // الخطوة 3: التوقيع جاري الآن على خوادم جيت هاب
-            progressBar.style.width = '70%';
-            statusText.innerText = "جاري التوقيع وزرع الأيقونات (الرجاء عدم إغلاق الصفحة)...";
-
-            // تفعيل العداد الذكي المتزامن مع المحرك "التوربو" (25 ثانية)
-            startSmartProgress();
-
-        } catch (error) {
-            progressBar.style.background = '#ff453a'; // أحمر للخطأ
-            statusText.style.color = '#ff453a';
-            statusText.innerText = "❌ فشل التوقيع: " + error.message;
-            signBtn.disabled = false;
         }
-    }
 
-    // شريط التحميل الذكي (يحاكي وقت التوقيع الفعلي في GitHub Actions)
-    function startSmartProgress() {
-        let progress = 70;
-        const interval = setInterval(() => {
-            progress += 1;
-            if (progress <= 96) {
-                document.getElementById('progressBar').style.width = progress + '%';
+        let finalInstallLink = "";
+
+        // 3. التثبيت والانتقال لقناة التلجرام
+        document.getElementById('installBtn').addEventListener('click', () => {
+            if (finalInstallLink) {
+                window.location.href = finalInstallLink;
+                setTimeout(() => {
+                    window.location.href = "https://t.me/hl00ss";
+                }, 1500);
             }
-        }, 800); // زيادة بطيئة ومنتظمة
+        });
 
-        // بعد مرور 25 ثانية (وقت اكتمال المحرك السريع)، يكتمل الشريط
-        setTimeout(() => {
-            clearInterval(interval);
-            const progressBar = document.getElementById('progressBar');
-            const statusText = document.getElementById('statusText');
-            
-            progressBar.style.width = '100%';
-            progressBar.style.background = '#32d74b'; // أخضر للنجاح
-            statusText.style.color = '#32d74b';
-            statusText.innerText = "✅ تم التوقيع بنجاح! جاري التجهيز للتثبيت...";
-            
-            // في الخطوة القادمة سيتم برمجة التوجيه التلقائي لرابط التحميل
-            // setTimeout(() => window.location.href = result.downloadUrl, 2000);
-            
-        }, 25000);
-    }
-</script>
+        // 4. إرسال الطلب والتتبع
+        document.getElementById('signForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('status');
+            const btn = document.getElementById('submitBtn');
+            const installBtn = document.getElementById('installBtn');
+            const progressWrapper = document.getElementById('progressWrapper');
+            const progressFill = document.getElementById('progressFill');
+
+            if(!appInput.value) return alert('يرجى اختيار تطبيق');
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="opacity-70">جاري الرفع...</span>';
+            status.classList.remove('hidden');
+            status.innerText = 'يتم رفع الشهادات وتشفيرها...';
+
+            try {
+                const p12 = await toBase64(document.getElementById('p12File').files[0]);
+                const prov = await toBase64(document.getElementById('provFile').files[0]);
+
+                const res = await fetch('/api/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ app: appInput.value, password: document.getElementById('password').value, p12, prov })
+                });
+
+                if(!res.ok) throw new Error('Server');
+                const data = await res.json();
+                const buildId = data.build_id;
+
+                progressWrapper.style.display = 'block';
+                btn.style.display = 'none';
+                status.innerText = 'يتم فك التطبيق وحقن الشهادة...';
+                
+                // التعديل 2: حركة ذكية وديناميكية سريعة تحاكي نشاط السيرفر
+                let simulatedProgress = 0;
+                progressFill.style.width = '0%';
+                
+                const animationInterval = setInterval(() => {
+                    if (simulatedProgress < 50) {
+                        simulatedProgress += Math.random() * 6 + 2; // حركة سريعة في البداية
+                    } else if (simulatedProgress < 85) {
+                        simulatedProgress += Math.random() * 3 + 1; // حركة متوسطة
+                    } else if (simulatedProgress < 96) {
+                        simulatedProgress += Math.random() * 0.5; // حركة بطيئة بانتظار رد السيرفر
+                    }
+                    
+                    if (simulatedProgress > 96) simulatedProgress = 96; // يقف عند 96% لحين اكتمال الـ API
+                    progressFill.style.width = simulatedProgress + '%';
+                }, 300); // تحديث كل جزء من الثانية لضمان السلاسة
+
+                // الفحص الفعلي لحالة السيرفر
+                const checker = setInterval(async () => {
+                    const serverStatus = await checkStatus(buildId, appInput.value);
+                    
+                    if (serverStatus.status === 'done') {
+                        clearInterval(checker);
+                        clearInterval(animationInterval); // إيقاف الحركة الوهمية
+                        progressFill.style.width = '100%'; // اكتمال الشريط فوراً
+                        
+                        setTimeout(() => {
+                            progressWrapper.style.display = 'none';
+                            installBtn.style.display = 'block';
+                            
+                            const manifestApiUrl = `https://${window.location.host}/api/manifest?ipa=${encodeURIComponent(serverStatus.ipaUrl)}&bundle_url=${encodeURIComponent(serverStatus.bundleUrl)}&app=${encodeURIComponent(appInput.value)}`;
+                            finalInstallLink = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestApiUrl)}`;
+                            
+                            status.innerText = 'تم التوقيع بنجاح! التطبيق جاهز للتثبيت.';
+                            status.style.color = 'var(--gold)';
+                            status.style.borderColor = 'rgba(212, 175, 55, 0.3)';
+                        }, 600); 
+                    }
+                }, 2000); 
+
+            } catch (err) {
+                status.innerText = 'حدث خطأ. يرجى المحاولة لاحقاً.';
+                status.style.color = '#ff4b4b';
+                progressWrapper.style.display = 'none';
+                btn.style.display = 'block';
+                btn.disabled = false;
+                btn.innerText = 'إعادة المحاولة';
+            }
+        };
+    </script>
 </body>
 </html>
