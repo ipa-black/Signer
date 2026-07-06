@@ -48,7 +48,7 @@ jobs:
             IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa"
             ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg"
           elif [[ "$APP_NAME" == "GBox" ]]; then 
-            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox_v5.7.6.ipa"
             ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg"
           fi
 
