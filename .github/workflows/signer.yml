@@ -11,24 +11,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment (Build ZSign from source)
+      - name: Setup Environment (Pre-Compiled ZSign - No Build Needed)
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y zip unzip curl libssl-dev python3 imagemagick build-essential
-
-          echo "Cloning original ZSign repository..."
-          # استخدام المستودع الأصلي المطابق لأمر البناء لتفادي فقدان الملفات
-          git clone https://github.com/zhlynn/zsign.git
-          cd zsign
-
-          echo "Building zsign from source..."
-          g++ *.cpp common/*.cpp openssl/*.cpp -lcrypto -O3 -o zsign
-
-          chmod +x zsign
-          sudo mv zsign /usr/local/bin/
+          sudo apt-get install -y zip unzip curl imagemagick
+          
+          echo "Downloading official pre-compiled ZSign..."
+          wget -q https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz
+          
+          echo "Extracting ZSign..."
+          tar -xzf zsign-linux-x86_64.tar.gz
+          
+          echo "Installing ZSign..."
+          # البحث عن الأداة الجاهزة ونقلها لمسار النظام الأساسي
+          ZSIGN_BIN=$(find . -type f -name "zsign" | head -n 1)
+          chmod +x "$ZSIGN_BIN"
+          sudo mv "$ZSIGN_BIN" /usr/local/bin/zsign
+          
+          echo "Testing ZSign..."
           zsign -v
-          cd ..
 
       - name: Download Raw IPA & Custom Icon
         env:
@@ -70,8 +72,6 @@ jobs:
           echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
 
           unzip -q raw_app.ipa -d extracted
-          
-          # استخراج مسار التطبيق بطريقة آمنة لتجنب أخطاء المسافات
           APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" | head -n 1)
 
           convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
