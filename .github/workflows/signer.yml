@@ -11,11 +11,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment (Ultra Fast ZSign)
+      - name: Setup Environment (Ultra Fast ZSign + ImageMagick)
         run: |
           set -euo pipefail
           
-          # تحميل الأداة الجاهزة فوراً بدون تضييع الوقت في تحديثات apt
+          # تثبيت مكتبة تحويل الصور بسرعة صامتة (-yqq) لتجنب الخطأ الأخير
+          sudo apt-get update -yqq
+          sudo apt-get install -yqq imagemagick zip unzip
+          
+          # تحميل الأداة الجاهزة فوراً
           wget -q https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz
           tar -xzf zsign-linux-x86_64.tar.gz
           
@@ -31,7 +35,6 @@ jobs:
           IPA_URL=""
           ICON_URL=""
 
-          # دمج تحديد الروابط لتقليل وقت المعالجة
           if [[ "$APP_NAME" == "ESign" ]]; then 
             IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa"
             ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg"
@@ -51,7 +54,7 @@ jobs:
 
           if [[ -z "$IPA_URL" ]]; then echo "Error: Unknown APP_NAME: $APP_NAME"; exit 1; fi
           
-          # التحميل المتوازي (-sL لجعله صامتاً وسريعاً، و & للتحميل في نفس اللحظة)
+          # التحميل المتوازي الصامت (-sL)
           curl -sL --fail -o raw_app.ipa "$IPA_URL" &
           curl -sL --fail -o downloaded_icon.jpeg "$ICON_URL" &
           wait
@@ -103,7 +106,7 @@ jobs:
           fi
 
           cd extracted
-          # الضغط من المستوى الأول (-1) يوفر ثواني ثمينة جداً
+          # الضغط من المستوى الأول (-1) لتسريع العملية
           zip -q -1 -r ../ready_to_sign.ipa Payload
           cd ..
 
@@ -113,7 +116,7 @@ jobs:
           PASSWORD: ${{ github.event.client_payload.password }}
         run: |
           set -euo pipefail
-          # الوضع الصامت (-q) لتقليل وقت الإخراج
+          # الوضع الصامت (-q) لتقليل وقت التوقيع
           zsign -q -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
 
       - name: Upload to Secure Storage
