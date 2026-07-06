@@ -11,28 +11,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment (Pre-Compiled ZSign - No Build Needed)
+      - name: Setup Environment (Ultra Fast ZSign)
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y zip unzip curl imagemagick
           
-          echo "Downloading official pre-compiled ZSign..."
+          # تحميل الأداة الجاهزة فوراً بدون تضييع الوقت في تحديثات apt
           wget -q https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz
-          
-          echo "Extracting ZSign..."
           tar -xzf zsign-linux-x86_64.tar.gz
           
-          echo "Installing ZSign..."
-          # البحث عن الأداة الجاهزة ونقلها لمسار النظام الأساسي
-          ZSIGN_BIN=$(find . -type f -name "zsign" | head -n 1)
+          ZSIGN_BIN=$(find . -type f -name "zsign" -print -quit)
           chmod +x "$ZSIGN_BIN"
           sudo mv "$ZSIGN_BIN" /usr/local/bin/zsign
-          
-          echo "Testing ZSign..."
-          zsign -v
 
-      - name: Download Raw IPA & Custom Icon
+      - name: Download Raw IPA & Custom Icon (Parallel)
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
         run: |
@@ -40,25 +31,30 @@ jobs:
           IPA_URL=""
           ICON_URL=""
 
-          # 1. روابط الـ IPA الخام
-          if [[ "$APP_NAME" == "ESign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa";
-          elif [[ "$APP_NAME" == "KSign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa";
-          elif [[ "$APP_NAME" == "Feather" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa";
-          elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa";
-          elif [[ "$APP_NAME" == "GBox" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"; fi
+          # دمج تحديد الروابط لتقليل وقت المعالجة
+          if [[ "$APP_NAME" == "ESign" ]]; then 
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa"
+            ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg"
+          elif [[ "$APP_NAME" == "KSign" ]]; then 
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa"
+            ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg"
+          elif [[ "$APP_NAME" == "Feather" ]]; then 
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa"
+            ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg"
+          elif [[ "$APP_NAME" == "Scarlet" ]]; then 
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa"
+            ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg"
+          elif [[ "$APP_NAME" == "GBox" ]]; then 
+            IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox.ipa"
+            ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg"
+          fi
 
           if [[ -z "$IPA_URL" ]]; then echo "Error: Unknown APP_NAME: $APP_NAME"; exit 1; fi
-          curl -L --fail -o raw_app.ipa "$IPA_URL"
-
-          # 2. روابط الأيقونات المخصصة
-          if [[ "$APP_NAME" == "ESign" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
-          elif [[ "$APP_NAME" == "KSign" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
-          elif [[ "$APP_NAME" == "Scarlet" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
-          elif [[ "$APP_NAME" == "GBox" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg";
-          elif [[ "$APP_NAME" == "Feather" ]]; then ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg"; fi
-
-          if [[ -z "$ICON_URL" ]]; then echo "Error: ICON_URL not set for APP_NAME: $APP_NAME"; exit 1; fi
-          curl -L --fail -o downloaded_icon.jpeg "$ICON_URL"
+          
+          # التحميل المتوازي (-sL لجعله صامتاً وسريعاً، و & للتحميل في نفس اللحظة)
+          curl -sL --fail -o raw_app.ipa "$IPA_URL" &
+          curl -sL --fail -o downloaded_icon.jpeg "$ICON_URL" &
+          wait
 
       - name: Inject Icon, Certificates & Extract Bundle ID
         env:
@@ -72,7 +68,7 @@ jobs:
           echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
 
           unzip -q raw_app.ipa -d extracted
-          APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" | head -n 1)
+          APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" -print -quit)
 
           convert downloaded_icon.jpeg "$APP_DIR/CustomIpaBlackIcon.png"
 
@@ -107,7 +103,8 @@ jobs:
           fi
 
           cd extracted
-          zip -qr ../ready_to_sign.ipa Payload
+          # الضغط من المستوى الأول (-1) يوفر ثواني ثمينة جداً
+          zip -q -1 -r ../ready_to_sign.ipa Payload
           cd ..
 
       - name: Sign IPA with ZSign
@@ -116,7 +113,8 @@ jobs:
           PASSWORD: ${{ github.event.client_payload.password }}
         run: |
           set -euo pipefail
-          zsign -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
+          # الوضع الصامت (-q) لتقليل وقت الإخراج
+          zsign -q -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
 
       - name: Upload to Secure Storage
         uses: softprops/action-gh-release@v2
