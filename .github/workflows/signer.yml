@@ -11,25 +11,25 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment (Ultra Fast Parallel)
+      - name: Setup Environment (Ultra Fast)
         run: |
           set -euo pipefail
           
-          # تنفيذ تثبيت ImageMagick وتحميل ZSign في نفس اللحظة (توازي) لتوفير الثواني
+          # تنفيذ التثبيت والتحميل في نفس اللحظة لتوفير الوقت
           (sudo apt-get update -yqq && sudo apt-get install -yqq imagemagick) &
           (wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz) &
           wait
           
-          # إعداد أداة ZSign
           ZSIGN_BIN=$(find . -type f -name "zsign" -print -quit)
           chmod +x "$ZSIGN_BIN"
           sudo mv "$ZSIGN_BIN" /usr/local/bin/zsign
 
-      - name: Download Raw IPA & Custom Icon (Parallel)
+      - name: Download Raw IPA & Custom Icon
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
         run: |
           set -euo pipefail
+          
           IPA_URL=""
           ICON_URL=""
 
@@ -50,12 +50,17 @@ jobs:
             ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg"
           fi
 
-          if [[ -z "$IPA_URL" ]]; then echo "Error: Unknown APP_NAME: $APP_NAME"; exit 1; fi
+          if [[ -z "$IPA_URL" ]]; then 
+            echo "Error: Unknown APP_NAME: $APP_NAME"
+            exit 1
+          fi
           
-          # التحميل المتوازي الصامت (-sL) للتطبيق والأيقونة
-          curl -sL --fail -o raw_app.ipa "$IPA_URL" &
-          curl -sL --fail -o downloaded_icon.jpeg "$ICON_URL" &
-          wait
+          echo "Downloading $APP_NAME IPA..."
+          # إزالة التحميل المتوازي لضمان عدم تخطي الأخطاء
+          curl -L --fail -o raw_app.ipa "$IPA_URL"
+          
+          echo "Downloading Custom Icon..."
+          curl -L --fail -o downloaded_icon.jpeg "$ICON_URL"
 
       - name: Inject Icon, Certificates & Extract Bundle ID
         env:
@@ -67,7 +72,6 @@ jobs:
         run: |
           set -euo pipefail
           
-          # نظام التوجيه الذكي: فحص نوع الشهادة المطلوبة
           if [[ "$USE_FREE_CERT" == "true" ]]; then
             echo "Using Built-in Free Certificate..."
             cp cert/cert.p12 cert.p12
@@ -80,7 +84,6 @@ jobs:
             CERT_PASSWORD="$CUSTOM_PASSWORD"
           fi
           
-          # حفظ كلمة المرور بمتغير بيئة للخطوة القادمة
           echo "CERT_PASSWORD=$CERT_PASSWORD" >> $GITHUB_ENV
 
           unzip -q raw_app.ipa -d extracted
@@ -110,7 +113,6 @@ jobs:
               print(f"com.ipablack.{app_name}")
           ' > bundle_id.txt
 
-          # الحقن الصامت
           if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
             ASSETS_DIR="$APP_DIR/signing-assets/PremiumCert"
             mkdir -p "$ASSETS_DIR"
@@ -120,7 +122,6 @@ jobs:
           fi
 
           cd extracted
-          # الضغط من المستوى الأول (-1) لتسريع العملية
           zip -q -1 -r ../ready_to_sign.ipa Payload
           cd ..
 
@@ -129,7 +130,6 @@ jobs:
           APP_NAME: ${{ github.event.client_payload.app_name }}
         run: |
           set -euo pipefail
-          # الوضع الصامت (-q) واستدعاء كلمة المرور الآمنة
           zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
 
       - name: Upload to Secure Storage
