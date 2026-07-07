@@ -21,11 +21,11 @@ jobs:
           PROV_BASE64: ${{ github.event.client_payload.prov_base64 }}
           CUSTOM_PASSWORD: ${{ github.event.client_payload.password }}
           BUILD_ID: ${{ github.event.client_payload.build_id }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # تصريح المرور الرسمي لتخطي الحظر
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
           set -euo pipefail
           
-          # 1. حل مشكلة الشهادات (OpenSSL 3) لضمان عدم تلف التشفير
+          # 1. تخطي حماية الشهادات (OpenSSL 3 Bypass)
           cat << 'EOF' > /tmp/custom_openssl.cnf
           openssl_conf = openssl_init
           [openssl_init]
@@ -40,19 +40,19 @@ jobs:
           EOF
           export OPENSSL_CONF=/tmp/custom_openssl.cnf
           
-          # 2. تحديد الأسماء (تأكد أن هذه الأسماء تطابق أسماء الملفات في إصدار V1 تماماً)
-          if [[ "$APP_NAME" == "ESign" ]]; then IPA_NAME="Esign.ipa"; ICON_NAME="IMG_1419.jpeg";
+          # 2. تحديد الأسماء (تأكد أن أسماء KSign وغيرها تطابق المرفوع عندك تماماً)
+          if [[ "$APP_NAME" == "ESign" ]]; then IPA_NAME="esign_5.0.2_unsigned.ipa"; ICON_NAME="IMG_1419.jpeg";
           elif [[ "$APP_NAME" == "KSign" ]]; then IPA_NAME="Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
           elif [[ "$APP_NAME" == "Feather" ]]; then IPA_NAME="Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
           elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_NAME="Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
           elif [[ "$APP_NAME" == "GBox" ]]; then IPA_NAME="GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
 
-          # 3. التحميل الذكي لأداة التوقيع
+          # 3. تحميل أداة التوقيع وجلب الأيقونة
           wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
           chmod +x zsign
           cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
           
-          # 4. الحل النهائي لمشكلة 22: التحميل عبر أداة GH بصلاحيات التوكن
+          # 4. التحميل عبر أداة جيت هاب الرسمية بصلاحيات التوكن (الحل الجذري للخطأ 22)
           echo "Downloading $IPA_NAME from Release V1..."
           gh release download V1 -p "$IPA_NAME" --repo ${{ github.repository }} || { 
             echo "❌ فشل التحميل! الملف '$IPA_NAME' غير موجود في قسم Releases (V1) بهذا الاسم."
@@ -62,7 +62,7 @@ jobs:
           }
           mv "$IPA_NAME" raw_app.ipa
 
-          # 5. تجهيز الشهادات بأمان تام
+          # 5. تنظيف وتجهيز الشهادات وكلمة المرور
           if [[ "$USE_FREE_CERT" == "true" ]]; then
             cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
             cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
@@ -73,7 +73,7 @@ jobs:
             CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r')
           fi
 
-          # 6. الحقن الجراحي (للحفاظ على السرعة)
+          # 6. الحقن الجراحي (تحديث Info.plist بدون فك ضغط كامل للحفاظ على السرعة)
           APP_DIR=$(unzip -Z1 raw_app.ipa | grep -o '^Payload/[^/]*.app/' | head -n 1)
           unzip -qq raw_app.ipa "${APP_DIR}Info.plist"
           mv downloaded_icon.png "${APP_DIR}CustomIpaBlackIcon.png"
@@ -105,11 +105,9 @@ jobs:
             echo "$CERT_PASSWORD" > "${APP_DIR}signing-assets/PremiumCert/cert.txt"
           fi
 
-          # 7. تحديث الـ IPA
+          # 7. إغلاق التطبيق والتوقيع
           zip -q0ur raw_app.ipa Payload
-
-          # 8. التوقيع الصامت
           ./zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" raw_app.ipa
 
-          # 9. الرفع المستقر
+          # 8. الرفع النهائي إلى GitHub Releases
           gh release create "build-${BUILD_ID}" "${APP_NAME}_signed.ipa" "bundle_id.txt" -t "Cloud Build ${BUILD_ID}" -R ${{ github.repository }}
