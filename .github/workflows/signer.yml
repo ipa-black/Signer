@@ -29,36 +29,35 @@ jobs:
           mkdir -p /dev/shm/workspace
           cd /dev/shm/workspace
           
-          # 2. تحديد الملفات بناءً على التطبيق
-          if [[ "$APP_NAME" == "ESign" ]]; then IPA_NAME="Esign.ipa"; ICON_NAME="IMG_1419.jpeg";
-          elif [[ "$APP_NAME" == "KSign" ]]; then IPA_NAME="Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
-          elif [[ "$APP_NAME" == "Feather" ]]; then IPA_NAME="Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
-          elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_NAME="Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
-          elif [[ "$APP_NAME" == "GBox" ]]; then IPA_NAME="GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
+          # 2. تحديد الروابط بناءً على التطبيق
+          if [[ "$APP_NAME" == "ESign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa"; ICON_NAME="IMG_1419.jpeg";
+          elif [[ "$APP_NAME" == "KSign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
+          elif [[ "$APP_NAME" == "Feather" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
+          elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
+          elif [[ "$APP_NAME" == "GBox" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
 
           # 3. جلب الأيقونة محلياً من مستودعك (0 ثانية - بدون إنترنت!)
           cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
           
-          # 4. تحميل ZSign وتطبيق الـ IPA بالتوازي (أداة gh تتجاوز حظر جيت هاب وتعمل بسرعة فائقة)
+          # 4. تحميل ZSign وتطبيق الـ IPA بالتوازي باستخدام curl لتجنب أي أخطاء في البحث
           wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz & PID_ZSIGN=$!
-          gh release download V1 -p "$IPA_NAME" --repo ${{ github.repository }} & PID_IPA=$!
+          curl -sL --fail -o raw_app.ipa "$IPA_URL" & PID_IPA=$!
 
-          # 5. تجهيز الشهادات أثناء وقت التحميل لاستغلال كل ثانية
+          # 5. تجهيز الشهادات أثناء وقت التحميل لاستغلال كل جزء من الثانية
           if [[ "$USE_FREE_CERT" == "true" ]]; then
-            cp $GITHUB_WORKSPACE/cert/cert.p12 ./cert.p12
-            cp $GITHUB_WORKSPACE/cert/profile.mobileprovision ./profile.mobileprovision
-            CERT_PASSWORD=$(cat $GITHUB_WORKSPACE/cert/pass.txt)
+            cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
+            cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
+            CERT_PASSWORD=$(cat "$GITHUB_WORKSPACE/cert/pass.txt")
           else
             echo "$P12_BASE64" | base64 -d > cert.p12
             echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
             CERT_PASSWORD="$CUSTOM_PASSWORD"
           fi
 
-          # 6. انتظار انتهاء التحميلات السريعة
+          # 6. انتظار انتهاء التحميلات
           wait $PID_ZSIGN
           wait $PID_IPA
           
-          mv "$IPA_NAME" raw_app.ipa
           chmod +x zsign
 
           # 7. الحقن الجراحي (صفر ثانية فك ضغط!)
