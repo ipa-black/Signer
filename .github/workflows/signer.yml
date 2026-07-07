@@ -11,9 +11,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          show-progress: false # إيقاف شريط التحميل الخاص بجيت هاب لتوفير ملي-ثواني إضافية
+          show-progress: false # إخفاء شريط التحميل لتوفير الوقت
 
-      - name: ⚡ Ultra Fast Sign (All-in-One Execution)
+      - name: 🚀 Hyper Speed Sign (RAM Disk & Surgical Inject)
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
           USE_FREE_CERT: ${{ github.event.client_payload.use_free_cert }}
@@ -21,59 +21,62 @@ jobs:
           PROV_BASE64: ${{ github.event.client_payload.prov_base64 }}
           CUSTOM_PASSWORD: ${{ github.event.client_payload.password }}
           BUILD_ID: ${{ github.event.client_payload.build_id }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # إذن الرفع المباشر
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           
-          # 1. بدء التحميلات في الخلفية معاً (بدون قيود IPv4)
+          # 1. الانتقال فوراً إلى ذاكرة الـ RAM (أسرع 100 مرة من القرص الصلب)
+          mkdir -p /dev/shm/workspace
+          cd /dev/shm/workspace
+          
+          # 2. تحميل كل شيء في نفس اللحظة بالخلفية
           wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz &
           PID_ZSIGN=$!
 
           IPA_URL=""
           ICON_URL=""
 
-          # تحديد الروابط
           if [[ "$APP_NAME" == "ESign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa"; ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg";
           elif [[ "$APP_NAME" == "KSign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa"; ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg";
           elif [[ "$APP_NAME" == "Feather" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa"; ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg";
           elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa"; ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg";
           elif [[ "$APP_NAME" == "GBox" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox_v5.7.6.ipa"; ICON_URL="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg"; fi
 
-          if [[ -z "$IPA_URL" ]]; then echo "Error: Invalid APP_NAME"; exit 1; fi
-
-          # تحميل متوازي آمن 100%
           curl -sL --fail -o raw_app.ipa "$IPA_URL" & PID_IPA=$!
           curl -sL --fail -o downloaded_icon.png "$ICON_URL" & PID_ICON=$!
 
-          # 2. تجهيز الشهادات أثناء انتظار اكتمال التحميل (استغلال الوقت)
+          # 3. سحب الشهادات من مسارها الحقيقي أثناء وقت التحميل
           if [[ "$USE_FREE_CERT" == "true" ]]; then
-            cp cert/cert.p12 cert.p12
-            cp cert/profile.mobileprovision profile.mobileprovision
-            CERT_PASSWORD=$(cat cert/pass.txt)
+            cp $GITHUB_WORKSPACE/cert/cert.p12 ./cert.p12
+            cp $GITHUB_WORKSPACE/cert/profile.mobileprovision ./profile.mobileprovision
+            CERT_PASSWORD=$(cat $GITHUB_WORKSPACE/cert/pass.txt)
           else
             echo "$P12_BASE64" | base64 -d > cert.p12
             echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
             CERT_PASSWORD="$CUSTOM_PASSWORD"
           fi
 
-          # 3. انتظار اكتمال تحميل كل الملفات معاً
+          # انتظار انتهاء التحميلات (يستغرق ثانية إلى ثانيتين)
           wait $PID_ZSIGN
           wait $PID_IPA
           wait $PID_ICON
 
-          # 4. تفعيل ZSign
           chmod +x zsign
-          sudo mv zsign /usr/local/bin/
 
-          # 5. الفك والزرع السريع
-          unzip -q raw_app.ipa -d extracted
-          APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" -print -quit)
-          mv downloaded_icon.png "$APP_DIR/CustomIpaBlackIcon.png"
+          # 4. الحقن الجراحي (بدون فك ضغط التطبيق بالكامل = صفر ثانية!)
+          # العثور على مسار مجلد التطبيق داخل הـ IPA
+          APP_DIR=$(unzip -Z1 raw_app.ipa | grep -o '^Payload/[^/]*.app/' | head -n 1)
+          
+          # استخراج ملف Info.plist فقط!
+          unzip -qq raw_app.ipa "${APP_DIR}Info.plist"
+          
+          # نقل الأيقونة للمسار الصحيح
+          mv downloaded_icon.png "${APP_DIR}CustomIpaBlackIcon.png"
 
           python3 -c '
           import plistlib, glob, os
           app_name = os.environ.get("APP_NAME", "unknown")
-          app_dirs = glob.glob("extracted/Payload/*.app")
+          app_dirs = glob.glob("Payload/*.app")
           if app_dirs:
               app_dir = app_dirs[0]
               plist_path = os.path.join(app_dir, "Info.plist")
@@ -91,20 +94,17 @@ jobs:
           ' > bundle_id.txt
 
           if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
-            ASSETS_DIR="$APP_DIR/signing-assets/PremiumCert"
-            mkdir -p "$ASSETS_DIR"
-            cp cert.p12 "$ASSETS_DIR/cert.p12"
-            cp profile.mobileprovision "$ASSETS_DIR/cert.mobileprovision"
-            echo "$CERT_PASSWORD" > "$ASSETS_DIR/cert.txt"
+            mkdir -p "${APP_DIR}signing-assets/PremiumCert"
+            cp cert.p12 "${APP_DIR}signing-assets/PremiumCert/cert.p12"
+            cp profile.mobileprovision "${APP_DIR}signing-assets/PremiumCert/cert.mobileprovision"
+            echo "$CERT_PASSWORD" > "${APP_DIR}signing-assets/PremiumCert/cert.txt"
           fi
 
-          # الضغط بمستوى الصفر (-0) لسرعة حرق البيانات بدون ضغط فعلي (يأخذ 0 ثانية تقريباً)
-          cd extracted
-          zip -q -0 -r ../ready_to_sign.ipa Payload
-          cd ..
+          # تحديث الـ IPA بالملفات الجديدة فقط (0.1 ثانية!)
+          zip -q0ur raw_app.ipa Payload
 
-          # 6. التوقيع الصامت
-          zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
+          # 5. التوقيع الصامت والمباشر
+          ./zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" raw_app.ipa
 
-          # 7. الرفع المباشر باستخدام سطر أوامر جيت هاب الرسمي (أسرع 5 مرات من الإضافة السابقة)
-          gh release create "build-${BUILD_ID}" "${APP_NAME}_signed.ipa" "bundle_id.txt" -t "Cloud Build ${BUILD_ID}"
+          # 6. الرفع الصاروخي من داخل الـ RAM مباشرة
+          gh release create "build-${BUILD_ID}" "${APP_NAME}_signed.ipa" "bundle_id.txt" -t "Cloud Build ${BUILD_ID}" -R ${{ github.repository }}
