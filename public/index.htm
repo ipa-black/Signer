@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>IPA BLACK | Premium Cloud</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root { 
@@ -16,62 +16,77 @@
         
         body { font-family: 'Cairo', sans-serif; background-color: var(--black); color: #ffffff; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100dvh; margin: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; }
         
-        /* سماء النجوم المتحركة */
-        #stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
+        /* سماء النجوم */
+        #stars-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; opacity: 0.6; }
         .star { 
             position: absolute; 
             background: var(--gold-light); 
             border-radius: 50%; 
-            box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
             animation: twinkle var(--twinkle-duration) infinite alternate ease-in-out, drift var(--drift-duration) infinite linear;
         }
-        @keyframes twinkle { 0% { opacity: 0.1; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1.2); } }
+        @keyframes twinkle { 0% { opacity: 0.1; transform: scale(0.8); } 100% { opacity: 0.8; transform: scale(1); } }
         @keyframes drift { from { transform: translateY(100vh); } to { transform: translateY(-10vh); } }
 
-        /* الكرات السائلة (الذهبية) */
-        .liquid-blob { position: absolute; filter: blur(60px); z-index: 1; opacity: 0.45; animation: liquid-morph 12s infinite ease-in-out alternate; transition: all 0.5s ease; }
-        .blob-1 { width: 80vw; height: 80vw; max-width: 400px; max-height: 400px; background: linear-gradient(135deg, var(--gold-dark), var(--gold)); top: -10%; right: -20%; }
-        .blob-2 { width: 70vw; height: 70vw; max-width: 350px; max-height: 350px; background: linear-gradient(135deg, #4a3808, var(--gold-dark)); bottom: -10%; left: -20%; animation-delay: -5s; animation-direction: alternate-reverse; }
-        @keyframes liquid-morph { 0% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(0, 0) rotate(0deg) scale(1); } 50% { border-radius: 70% 30% 50% 50% / 30% 30% 70% 70%; transform: translate(-20px, 30px) rotate(45deg) scale(1.1); } 100% { border-radius: 40% 60% 70% 30% / 40% 40% 60% 50%; transform: translate(20px, -20px) rotate(90deg) scale(0.9); } }
+        /* الكرات السائلة */
+        .liquid-blob { position: absolute; filter: blur(80px); z-index: 1; opacity: 0.2; animation: liquid-morph 15s infinite ease-in-out alternate; }
+        .blob-1 { width: 80vw; height: 80vw; max-width: 400px; max-height: 400px; background: var(--gold-dark); top: -10%; right: -20%; }
+        .blob-2 { width: 70vw; height: 70vw; max-width: 350px; max-height: 350px; background: var(--gold); bottom: -10%; left: -20%; animation-delay: -5s; animation-direction: alternate-reverse; }
+        @keyframes liquid-morph { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20px, -20px) scale(0.9); } }
 
-        /* حاوية الهاتف الزجاجية */
-        .glass-mobile-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(15, 15, 15, 0.4); backdrop-filter: blur(35px) saturate(200%); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 40px; box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), inset 0 1px 15px rgba(255, 255, 255, 0.05), inset 0 -1px 15px rgba(212, 175, 55, 0.05); padding: 2rem 1.5rem; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1.2rem; }
+        /* حاوية الهاتف */
+        .glass-mobile-card { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; 
+            background: rgba(15, 15, 15, 0.6); backdrop-filter: blur(25px); 
+            border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 35px; 
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); 
+            padding: 2rem 1.5rem; width: 92%; max-width: 400px; 
+            display: flex; flex-direction: column; gap: 1.2rem; max-height: 95vh; overflow-y: auto; scrollbar-width: none; 
+        }
+        .glass-mobile-card::-webkit-scrollbar { display: none; }
         
-        /* عناصر الواجهة */
-        .custom-select { position: relative; }
-        .select-selected { background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 0.95rem; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); cursor: pointer; transition: 0.3s; }
-        .select-items { position: absolute; background: rgba(15, 15, 15, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 20px; top: calc(100% + 8px); left: 0; right: 0; z-index: 99; display: none; max-height: 220px; overflow-y: auto; }
-        .select-items div { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.03); font-size: 0.95rem; cursor: pointer; }
-        .select-items img, .select-selected img { width: 32px; height: 32px; border-radius: 8px; background: transparent; object-fit: cover; }
+        /* مفتاح التبديل */
+        .toggle-switch { position: relative; display: inline-block; width: 46px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.05); transition: .4s; border-radius: 34px; border: 1px solid rgba(212, 175, 55, 0.2); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: var(--gold); transition: .4s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; }
+        input:checked + .slider { background-color: rgba(212, 175, 55, 0.15); }
+        input:checked + .slider:before { transform: translateX(22px); background-color: var(--gold-light); }
 
-        .upload-row { display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.05); border: 1px dashed rgba(212, 175, 55, 0.4); border-radius: 20px; padding: 12px 16px; transition: 0.3s; cursor: pointer; }
-        .upload-row:active { background: rgba(212, 175, 55, 0.15); }
+        /* تنسيقات قسم VIP */
+        .premium-section { transition: all 0.4s ease; }
+        .custom-select { position: relative; }
+        .select-selected { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 18px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.3s; }
+        .select-items { position: absolute; background: rgba(15, 15, 15, 0.98); backdrop-filter: blur(20px); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 18px; top: calc(100% + 8px); left: 0; right: 0; z-index: 99; display: none; max-height: 200px; overflow-y: auto; }
+        .select-items div { padding: 12px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.9rem; cursor: pointer; }
+        .select-items img, .select-selected img, .app-icon-img { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+
+        .upload-row { display: flex; justify-content: space-between; align-items: center; background: rgba(212, 175, 55, 0.03); border: 1px dashed rgba(212, 175, 55, 0.3); border-radius: 18px; padding: 12px 16px; transition: 0.3s; cursor: pointer; }
+        .upload-row:active { background: rgba(212, 175, 55, 0.08); }
         .upload-text { display: flex; flex-direction: column; text-align: right; }
 
-        .gold-input { width: 60%; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 14px; padding: 10px; color: white; text-align: center; font-size: 0.9rem; letter-spacing: 2px; outline: none; margin: 0 auto; display: block;}
-        .gold-input:focus { border-color: var(--gold); }
+        .gold-input { width: 70%; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 14px; padding: 10px; color: white; text-align: center; font-size: 0.9rem; letter-spacing: 1px; outline: none; margin: 0 auto; display: block; transition: 0.3s;}
+        .gold-input:focus { border-color: var(--gold); background: rgba(0,0,0,0.6); }
 
-        .btn-liquid { background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light)); background-size: 200% 200%; animation: gold-shine 3s ease infinite; color: #000; font-weight: 900; font-size: 1.05rem; padding: 16px; border-radius: 20px; width: 100%; margin-top: 10px; border: none; box-shadow: 0 10px 25px rgba(170, 137, 40, 0.4); cursor: pointer; transition: 0.3s; }
-        @keyframes gold-shine { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
-        .install-btn { background: #111; color: var(--gold); border: 2px solid var(--gold); display: none; text-align: center; text-decoration: none; animation: none; font-weight: 900; }
+        .btn-liquid { background: linear-gradient(135deg, var(--gold-dark), var(--gold)); color: #000; font-weight: 800; font-size: 1rem; padding: 14px; border-radius: 18px; width: 100%; margin-top: 5px; border: none; cursor: pointer; transition: 0.3s transform; }
+        .btn-liquid:active { transform: scale(0.97); }
 
-        .progress-wrapper { width: 100%; background: rgba(255, 255, 255, 0.1); border-radius: 10px; height: 8px; overflow: hidden; display: none; margin-top: 10px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+        .progress-wrapper { width: 100%; background: rgba(255, 255, 255, 0.05); border-radius: 8px; height: 6px; overflow: hidden; display: none; margin-top: 10px; }
+        .progress-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.3s ease-out; }
+
+        /* تنسيقات قسم الشهادة المجانية */
+        .free-section { display: none; opacity: 0; transition: all 0.4s ease; display: flex; flex-direction: column; gap: 10px; }
+        .free-app-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 12px 16px; transition: 0.3s; }
+        .free-app-item:hover { background: rgba(255,255,255,0.06); border-color: rgba(212,175,55,0.2); }
         
-        /* التعديل 1: إضافة لمعان ديناميكي للشريط يجعله يبدو كسيرفر نشط */
-        .progress-fill { 
-            width: 0%; 
-            height: 100%; 
-            background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold), var(--gold-dark)); 
-            background-size: 200% 100%;
-            animation: loading-shimmer 1.5s infinite linear;
-            box-shadow: 0 0 10px var(--gold); 
-            transition: width 0.3s ease-out; 
-        }
-        @keyframes loading-shimmer {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        .install-action-btn { background: rgba(212, 175, 55, 0.1); color: var(--gold); border: 1px solid rgba(212, 175, 55, 0.3); padding: 6px 16px; border-radius: 12px; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.3s; }
+        .install-action-btn:active { transform: scale(0.92); background: var(--gold); color: #000; }
+        
+        .app-progress-container { display: none; flex-direction: column; align-items: center; width: 70px; }
+        .app-pct-text { font-size: 0.85rem; font-weight: 800; color: var(--gold-light); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+        .app-mini-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+        .app-mini-fill { height: 100%; width: 0%; background: var(--gold); transition: width 0.3s ease; }
+        
+        .success-badge { display: none; color: #4ade80; font-size: 0.75rem; font-weight: 800; align-items: center; gap: 4px; background: rgba(74, 222, 128, 0.1); padding: 6px 10px; border-radius: 10px; border: 1px solid rgba(74, 222, 128, 0.2); }
     </style>
 </head>
 <body>
@@ -83,99 +98,165 @@
     <div class="liquid-blob blob-2"></div>
 
     <div class="glass-mobile-card">
-        <div class="text-center mb-2">
-            <h1 class="text-3xl font-black tracking-tighter" style="color: var(--gold); text-shadow: 0 0 15px rgba(212,175,55,0.3);">IPA BLACK</h1>
-            <p class="text-[11px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Premium Cloud Signer</p>
+        <div class="text-center mb-1">
+            <h1 class="text-2xl font-black tracking-tighter" style="color: var(--gold);">IPA BLACK</h1>
+            <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Premium Cloud Signer</p>
         </div>
 
-        <form id="signForm" class="space-y-4">
+        <!-- مفتاح التبديل الديناميكي -->
+        <div class="flex items-center justify-between bg-[rgba(255,255,255,0.02)] border border-[rgba(255,255,255,0.05)] rounded-2xl p-3 transition-colors duration-300" id="modeToggleBox">
+            <span class="text-[12px] font-bold text-gray-300 flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                <span id="toggleTextLabel">الشهادة المجانية</span>
+            </span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="freeCertToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <!-- 1. قسم الشهادة المخصصة -->
+        <form id="signForm" class="premium-section space-y-4">
             <div class="custom-select" id="customSelect">
                 <div class="select-selected" id="selectedApp">
-                    <!-- أيقونة الترس الذهبية الافتراضية -->
-                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZDRhZjM3IiBzdHJva2Utd2lkdGg9IjIiPjxyZWN0IHg9IjMiIHk9IjMiIHdpZHRoPSIxOCIgaGVpZ2h0PSIxOCIgcng9IjQiLz48L3N2Zz4=" alt="icon">
-                    <span class="text-gray-200">حدد التطبيق للتوقيع...</span>
+                    <img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg" alt="icon">
+                    <span class="text-gray-200">ESign</span>
                 </div>
                 <div class="select-items" id="appOptions">
-                    <!-- جميع الأيقونات مكتملة ومربوطة بمستودعك -->
                     <div data-value="ESign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg" alt="ESign">ESign</div>
                     <div data-value="KSign"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg" alt="KSign">KSign</div>
                     <div data-value="Scarlet"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg" alt="Scarlet">Scarlet</div>
                     <div data-value="GBox"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg" alt="GBox">GBox</div>
                     <div data-value="Feather"><img src="https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg" alt="Feather">Feather</div>
                 </div>
-                <input type="hidden" id="appInput" required>
+                <input type="hidden" id="appInput" value="ESign" required>
             </div>
 
-            <div class="space-y-3">
+            <div class="space-y-2">
                 <div class="upload-row" onclick="document.getElementById('p12File').click()">
                     <div class="upload-text">
-                        <span class="text-[13px] font-bold text-gray-200">ملف P12</span>
+                        <span class="text-[12px] font-bold text-gray-200">ملف P12</span>
                         <span id="p12Name" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار الشهادة</span>
                     </div>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <input type="file" id="p12File" class="hidden" accept=".p12">
                 </div>
 
                 <div class="upload-row" onclick="document.getElementById('provFile').click()">
                     <div class="upload-text">
-                        <span class="text-[13px] font-bold text-gray-200">ملف Provision</span>
+                        <span class="text-[12px] font-bold text-gray-200">ملف Provision</span>
                         <span id="provName" class="text-[10px] text-gray-500 mt-1">اضغط لاختيار التكوين</span>
                     </div>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold-light)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     <input type="file" id="provFile" class="hidden" accept=".mobileprovision">
                 </div>
             </div>
 
             <input type="password" id="password" placeholder="كلمة المرور" class="gold-input">
 
-            <button type="submit" id="submitBtn" class="btn-liquid">بدء التوقيع السحابي</button>
+            <button type="submit" id="submitBtn" class="btn-liquid">بدء التوقيع</button>
             
             <div id="progressWrapper" class="progress-wrapper">
                 <div id="progressFill" class="progress-fill"></div>
             </div>
-
-            <button type="button" id="installBtn" class="btn-liquid install-btn">تثبيت التطبيق الآن</button>
+            <div id="status" class="text-center text-[10px] font-bold hidden text-[var(--gold)] mt-2"></div>
         </form>
 
-        <div id="status" class="mt-2 text-center text-[11px] font-bold hidden px-3 py-2 rounded-xl bg-black/50 border border-[var(--gold-dark)] text-[var(--gold)]"></div>
+        <!-- 2. قسم الشهادة المجانية -->
+        <div id="freeAppsSection" class="free-section" style="display: none;">
+            <!-- سيتم توليد التطبيقات هنا عبر الجافاسكربت -->
+        </div>
+
     </div>
 
     <script>
-        // 1. توليد النجوم الأنيقة
+        // توليد النجوم
         const starsContainer = document.getElementById('stars-container');
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 40; i++) {
             let star = document.createElement('div');
             star.className = 'star';
-            
             star.style.left = Math.random() * 100 + 'vw';
-            
             let size = Math.random() * 2 + 1;
-            star.style.width = size + 'px';
-            star.style.height = size + 'px';
-            
-            star.style.setProperty('--twinkle-duration', (Math.random() * 2 + 1) + 's');
-            star.style.setProperty('--drift-duration', (Math.random() * 20 + 30) + 's');
-            
-            star.style.animationDelay = (Math.random() * -40) + 's';
-            
+            star.style.width = size + 'px'; star.style.height = size + 'px';
+            star.style.setProperty('--twinkle-duration', (Math.random() * 3 + 2) + 's');
+            star.style.setProperty('--drift-duration', (Math.random() * 30 + 40) + 's');
+            star.style.animationDelay = (Math.random() * -50) + 's';
             starsContainer.appendChild(star);
         }
 
-        // 2. منطق الواجهة البرمجية
-        const selectedApp = document.getElementById('selectedApp');
-        const appOptions = document.getElementById('appOptions');
-        const appInput = document.getElementById('appInput');
+        // بيانات التطبيقات بنصوص نظيفة
+        const appsData = [
+            { id: 'ESign', name: 'ESign', icon: 'https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1419.jpeg' },
+            { id: 'KSign', name: 'KSign', icon: 'https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1416.jpeg' },
+            { id: 'Scarlet', name: 'Scarlet', icon: 'https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1420.jpeg' },
+            { id: 'GBox', name: 'GBox', icon: 'https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1417.jpeg' },
+            { id: 'Feather', name: 'Feather', icon: 'https://raw.githubusercontent.com/ipa-black/Signer/refs/heads/main/icons/IMG_1421.jpeg' }
+        ];
 
-        selectedApp.onclick = e => { e.stopPropagation(); appOptions.style.display = appOptions.style.display === 'block' ? 'none' : 'block'; };
-        document.querySelectorAll('.select-items div').forEach(opt => {
-            opt.onclick = function() { selectedApp.innerHTML = this.innerHTML; appInput.value = this.getAttribute('data-value'); appOptions.style.display = 'none'; };
+        // بناء قائمة التطبيقات
+        const freeAppsSection = document.getElementById('freeAppsSection');
+        appsData.forEach(app => {
+            freeAppsSection.innerHTML += `
+                <div class="free-app-item">
+                    <div class="flex items-center gap-3">
+                        <img src="${app.icon}" class="app-icon-img" alt="${app.id}">
+                        <span class="text-[13px] font-bold text-gray-200">${app.name}</span>
+                    </div>
+                    
+                    <button class="install-action-btn" onclick="installFreeApp('${app.id}', this)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        تثبيت
+                    </button>
+                    
+                    <div class="app-progress-container">
+                        <span class="app-pct-text">0%</span>
+                        <div class="app-mini-bar"><div class="app-mini-fill"></div></div>
+                    </div>
+
+                    <div class="success-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        جاهز
+                    </div>
+                </div>
+            `;
         });
-        document.onclick = () => appOptions.style.display = 'none';
 
+        // منطق التبديل وتغيير النص ديناميكياً
+        const freeCertToggle = document.getElementById('freeCertToggle');
+        const premiumSection = document.querySelector('.premium-section');
+        const modeToggleBox = document.getElementById('modeToggleBox');
+        const toggleTextLabel = document.getElementById('toggleTextLabel'); // استدعاء النص لتغييره
+
+        freeCertToggle.addEventListener('change', function() {
+            if (this.checked) {
+                // المستخدم انتقل للشهادة المجانية -> الزر الآن يعرض خيار العودة للمدفوعة
+                toggleTextLabel.innerText = "الشهادة المدفوعة";
+                
+                modeToggleBox.style.borderColor = 'rgba(212, 175, 55, 0.3)';
+                premiumSection.style.opacity = '0';
+                setTimeout(() => {
+                    premiumSection.style.display = 'none';
+                    freeAppsSection.style.display = 'flex';
+                    setTimeout(() => freeAppsSection.style.opacity = '1', 10);
+                }, 300);
+            } else {
+                // المستخدم عاد للشهادة المدفوعة -> الزر الآن يعرض خيار الانتقال للمجانية
+                toggleTextLabel.innerText = "الشهادة المجانية";
+                
+                modeToggleBox.style.borderColor = 'rgba(255,255,255,0.05)';
+                freeAppsSection.style.opacity = '0';
+                setTimeout(() => {
+                    freeAppsSection.style.display = 'none';
+                    premiumSection.style.display = 'block';
+                    setTimeout(() => premiumSection.style.opacity = '1', 10);
+                }, 300);
+            }
+        });
+
+        // دوال مساعدة
         const truncate = (str, n) => str.length > n ? str.substr(0, n - 1) + '...' : str;
         document.getElementById('p12File').onchange = e => { if(e.target.files[0]) document.getElementById('p12Name').innerText = truncate(e.target.files[0].name, 25); };
         document.getElementById('provFile').onchange = e => { if(e.target.files[0]) document.getElementById('provName').innerText = truncate(e.target.files[0].name, 25); };
-
         const toBase64 = file => new Promise((resolve, reject) => {
             const reader = new FileReader(); reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error);
@@ -190,99 +271,142 @@
             }
         }
 
-        let finalInstallLink = "";
+        // توقيع الشهادة المجانية
+        async function installFreeApp(appName, btnElement) {
+            const itemContainer = btnElement.parentElement;
+            const progressContainer = itemContainer.querySelector('.app-progress-container');
+            const pctText = itemContainer.querySelector('.app-pct-text');
+            const fillBar = itemContainer.querySelector('.app-mini-fill');
+            const successBadge = itemContainer.querySelector('.success-badge');
 
-        // 3. التثبيت والانتقال لقناة التلجرام
-        document.getElementById('installBtn').addEventListener('click', () => {
-            if (finalInstallLink) {
-                window.location.href = finalInstallLink;
+            btnElement.style.display = 'none';
+            progressContainer.style.display = 'flex';
+
+            let pct = 0;
+            const simInterval = setInterval(() => {
+                if (pct < 95) {
+                    pct += Math.floor(Math.random() * 4) + 1;
+                    if (pct > 95) pct = 95;
+                    pctText.innerText = pct + '%';
+                    fillBar.style.width = pct + '%';
+                }
+            }, 300);
+
+            try {
+                const res = await fetch('/api/sign', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ app: appName, use_free_cert: true })
+                });
+                
+                if(!res.ok) throw new Error('Error');
+                const data = await res.json();
+                const buildId = data.build_id;
+
+                const checker = setInterval(async () => {
+                    const serverStatus = await checkStatus(buildId, appName);
+                    if (serverStatus.status === 'done') {
+                        clearInterval(checker);
+                        clearInterval(simInterval);
+                        
+                        pctText.innerText = '100%';
+                        fillBar.style.width = '100%';
+                        
+                        setTimeout(() => {
+                            progressContainer.style.display = 'none';
+                            successBadge.style.display = 'flex';
+                            
+                            const manifestApiUrl = `https://${window.location.host}/api/manifest?ipa=${encodeURIComponent(serverStatus.ipaUrl)}&bundle_url=${encodeURIComponent(serverStatus.bundleUrl)}&app=${encodeURIComponent(appName)}`;
+                            window.location.href = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestApiUrl)}`;
+                        }, 800);
+                    }
+                }, 2000);
+
+            } catch (err) {
+                clearInterval(simInterval);
+                pctText.innerText = 'فشل';
+                pctText.style.color = '#ef4444';
+                fillBar.style.background = '#ef4444';
                 setTimeout(() => {
-                    window.location.href = "https://t.me/hl00ss";
-                }, 1500);
+                    progressContainer.style.display = 'none';
+                    btnElement.style.display = 'flex';
+                    pctText.style.color = 'var(--gold-light)';
+                    fillBar.style.background = 'var(--gold)';
+                }, 2000);
             }
-        });
+        }
 
-        // 4. إرسال الطلب والتتبع
+        // قسم الـ VIP
+        const selectedApp = document.getElementById('selectedApp');
+        const appOptions = document.getElementById('appOptions');
+        const appInput = document.getElementById('appInput');
+
+        selectedApp.onclick = e => { e.stopPropagation(); appOptions.style.display = appOptions.style.display === 'block' ? 'none' : 'block'; };
+        document.querySelectorAll('.select-items div').forEach(opt => {
+            opt.onclick = function() { selectedApp.innerHTML = this.innerHTML; appInput.value = this.getAttribute('data-value'); appOptions.style.display = 'none'; };
+        });
+        document.onclick = () => appOptions.style.display = 'none';
+
         document.getElementById('signForm').onsubmit = async (e) => {
             e.preventDefault();
             const status = document.getElementById('status');
             const btn = document.getElementById('submitBtn');
-            const installBtn = document.getElementById('installBtn');
             const progressWrapper = document.getElementById('progressWrapper');
             const progressFill = document.getElementById('progressFill');
+            const p12File = document.getElementById('p12File');
+            const provFile = document.getElementById('provFile');
+            const passwordInput = document.getElementById('password');
 
-            if(!appInput.value) return alert('يرجى اختيار تطبيق');
+            if (!p12File.files[0] || !provFile.files[0] || !passwordInput.value) {
+                return alert('يرجى إرفاق ملفات الشهادة وكلمة المرور!');
+            }
 
-            btn.disabled = true;
-            btn.innerHTML = '<span class="opacity-70">جاري الرفع...</span>';
-            status.classList.remove('hidden');
-            status.innerText = 'يتم رفع الشهادات وتشفيرها...';
+            btn.disabled = true; btn.innerText = 'جاري المعالجة...';
+            status.classList.remove('hidden'); status.innerText = 'يتم الاتصال بالمحرك...';
 
             try {
-                const p12 = await toBase64(document.getElementById('p12File').files[0]);
-                const prov = await toBase64(document.getElementById('provFile').files[0]);
+                const p12 = await toBase64(p12File.files[0]);
+                const prov = await toBase64(provFile.files[0]);
 
                 const res = await fetch('/api/sign', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ app: appInput.value, password: document.getElementById('password').value, p12, prov })
+                    body: JSON.stringify({ app: appInput.value, p12, prov, password: passwordInput.value })
                 });
 
-                if(!res.ok) throw new Error('Server');
+                if(!res.ok) throw new Error('Error');
                 const data = await res.json();
                 const buildId = data.build_id;
 
                 progressWrapper.style.display = 'block';
                 btn.style.display = 'none';
-                status.innerText = 'يتم فك التطبيق وحقن الشهادة...';
+                status.innerText = 'يتم التوقيع الآن...';
                 
-                // التعديل 2: حركة ذكية وديناميكية سريعة تحاكي نشاط السيرفر
                 let simulatedProgress = 0;
-                progressFill.style.width = '0%';
-                
                 const animationInterval = setInterval(() => {
-                    if (simulatedProgress < 50) {
-                        simulatedProgress += Math.random() * 6 + 2; // حركة سريعة في البداية
-                    } else if (simulatedProgress < 85) {
-                        simulatedProgress += Math.random() * 3 + 1; // حركة متوسطة
-                    } else if (simulatedProgress < 96) {
-                        simulatedProgress += Math.random() * 0.5; // حركة بطيئة بانتظار رد السيرفر
-                    }
-                    
-                    if (simulatedProgress > 96) simulatedProgress = 96; // يقف عند 96% لحين اكتمال الـ API
+                    if (simulatedProgress < 95) simulatedProgress += Math.random() * 4;
+                    if (simulatedProgress > 95) simulatedProgress = 95;
                     progressFill.style.width = simulatedProgress + '%';
-                }, 300); // تحديث كل جزء من الثانية لضمان السلاسة
+                }, 400);
 
-                // الفحص الفعلي لحالة السيرفر
                 const checker = setInterval(async () => {
                     const serverStatus = await checkStatus(buildId, appInput.value);
-                    
                     if (serverStatus.status === 'done') {
-                        clearInterval(checker);
-                        clearInterval(animationInterval); // إيقاف الحركة الوهمية
-                        progressFill.style.width = '100%'; // اكتمال الشريط فوراً
+                        clearInterval(checker); clearInterval(animationInterval);
+                        progressFill.style.width = '100%';
+                        status.innerText = '✅ تم التوقيع بنجاح! جاري التثبيت...';
                         
                         setTimeout(() => {
-                            progressWrapper.style.display = 'none';
-                            installBtn.style.display = 'block';
-                            
                             const manifestApiUrl = `https://${window.location.host}/api/manifest?ipa=${encodeURIComponent(serverStatus.ipaUrl)}&bundle_url=${encodeURIComponent(serverStatus.bundleUrl)}&app=${encodeURIComponent(appInput.value)}`;
-                            finalInstallLink = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestApiUrl)}`;
-                            
-                            status.innerText = 'تم التوقيع بنجاح! التطبيق جاهز للتثبيت.';
-                            status.style.color = 'var(--gold)';
-                            status.style.borderColor = 'rgba(212, 175, 55, 0.3)';
-                        }, 600); 
+                            window.location.href = `itms-services://?action=download-manifest&url=${encodeURIComponent(manifestApiUrl)}`;
+                        }, 1000); 
                     }
                 }, 2000); 
 
             } catch (err) {
-                status.innerText = 'حدث خطأ. يرجى المحاولة لاحقاً.';
-                status.style.color = '#ff4b4b';
+                status.innerText = '❌ فشل التوقيع، حاول مجدداً.';
                 progressWrapper.style.display = 'none';
-                btn.style.display = 'block';
-                btn.disabled = false;
-                btn.innerText = 'إعادة المحاولة';
+                btn.style.display = 'block'; btn.disabled = false; btn.innerText = 'بدء التوقيع';
             }
         };
     </script>
