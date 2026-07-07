@@ -11,18 +11,16 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Environment (Ultra Fast ZSign + ImageMagick)
+      - name: Setup Environment (Ultra Fast Parallel)
         run: |
           set -euo pipefail
           
-          # تثبيت مكتبة تحويل الصور بسرعة صامتة (-yqq) لتجنب الخطأ الأخير
-          sudo apt-get update -yqq
-          sudo apt-get install -yqq imagemagick zip unzip
+          # تنفيذ تثبيت ImageMagick وتحميل ZSign في نفس اللحظة (توازي) لتوفير الثواني
+          (sudo apt-get update -yqq && sudo apt-get install -yqq imagemagick) &
+          (wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz) &
+          wait
           
-          # تحميل الأداة الجاهزة فوراً
-          wget -q https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz
-          tar -xzf zsign-linux-x86_64.tar.gz
-          
+          # إعداد أداة ZSign
           ZSIGN_BIN=$(find . -type f -name "zsign" -print -quit)
           chmod +x "$ZSIGN_BIN"
           sudo mv "$ZSIGN_BIN" /usr/local/bin/zsign
@@ -54,7 +52,7 @@ jobs:
 
           if [[ -z "$IPA_URL" ]]; then echo "Error: Unknown APP_NAME: $APP_NAME"; exit 1; fi
           
-          # التحميل المتوازي الصامت (-sL)
+          # التحميل المتوازي الصامت (-sL) للتطبيق والأيقونة
           curl -sL --fail -o raw_app.ipa "$IPA_URL" &
           curl -sL --fail -o downloaded_icon.jpeg "$ICON_URL" &
           wait
@@ -62,13 +60,28 @@ jobs:
       - name: Inject Icon, Certificates & Extract Bundle ID
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
-          PASSWORD: ${{ github.event.client_payload.password }}
+          USE_FREE_CERT: ${{ github.event.client_payload.use_free_cert }}
           P12_BASE64: ${{ github.event.client_payload.p12_base64 }}
           PROV_BASE64: ${{ github.event.client_payload.prov_base64 }}
+          CUSTOM_PASSWORD: ${{ github.event.client_payload.password }}
         run: |
           set -euo pipefail
-          echo "$P12_BASE64" | base64 -d > cert.p12
-          echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
+          
+          # نظام التوجيه الذكي: فحص نوع الشهادة المطلوبة
+          if [[ "$USE_FREE_CERT" == "true" ]]; then
+            echo "Using Built-in Free Certificate..."
+            cp cert/cert.p12 cert.p12
+            cp cert/profile.mobileprovision profile.mobileprovision
+            CERT_PASSWORD=$(cat cert/pass.txt)
+          else
+            echo "Using Custom VIP Certificate..."
+            echo "$P12_BASE64" | base64 -d > cert.p12
+            echo "$PROV_BASE64" | base64 -d > profile.mobileprovision
+            CERT_PASSWORD="$CUSTOM_PASSWORD"
+          fi
+          
+          # حفظ كلمة المرور بمتغير بيئة للخطوة القادمة
+          echo "CERT_PASSWORD=$CERT_PASSWORD" >> $GITHUB_ENV
 
           unzip -q raw_app.ipa -d extracted
           APP_DIR=$(find extracted/Payload -maxdepth 1 -name "*.app" -print -quit)
@@ -97,12 +110,13 @@ jobs:
               print(f"com.ipablack.{app_name}")
           ' > bundle_id.txt
 
+          # الحقن الصامت
           if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
             ASSETS_DIR="$APP_DIR/signing-assets/PremiumCert"
             mkdir -p "$ASSETS_DIR"
             cp cert.p12 "$ASSETS_DIR/cert.p12"
             cp profile.mobileprovision "$ASSETS_DIR/cert.mobileprovision"
-            echo "$PASSWORD" > "$ASSETS_DIR/cert.txt"
+            echo "$CERT_PASSWORD" > "$ASSETS_DIR/cert.txt"
           fi
 
           cd extracted
@@ -113,11 +127,10 @@ jobs:
       - name: Sign IPA with ZSign
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
-          PASSWORD: ${{ github.event.client_payload.password }}
         run: |
           set -euo pipefail
-          # الوضع الصامت (-q) لتقليل وقت التوقيع
-          zsign -q -k cert.p12 -p "$PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
+          # الوضع الصامت (-q) واستدعاء كلمة المرور الآمنة
+          zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" ready_to_sign.ipa
 
       - name: Upload to Secure Storage
         uses: softprops/action-gh-release@v2
