@@ -6,14 +6,14 @@ on:
 
 jobs:
   build_and_sign:
-    runs-on: ubuntu-latest # عدنا لأسرع خادم متاح بدون طوابير انتظار
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          show-progress: false # إخفاء شريط التحميل لتوفير الملي-ثواني
+          show-progress: false
 
-      - name: 🚀 Hyper Speed Sign (RAM Disk & OpenSSL Bypass)
+      - name: 🛡️ Stable Production Sign (Safe & Fast)
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
           USE_FREE_CERT: ${{ github.event.client_payload.use_free_cert }}
@@ -25,7 +25,7 @@ jobs:
         run: |
           set -euo pipefail
           
-          # 1. الاختراق السحري: حقن ملف تكوين OpenSSL مخصص في الـ RAM لدعم الشهادات (يحل الخطأ 255 فوراً)
+          # 1. حل مشكلة الشهادات (OpenSSL 3) لضمان عدم تلف التشفير
           cat << 'EOF' > /tmp/custom_openssl.cnf
           openssl_conf = openssl_init
           [openssl_init]
@@ -40,24 +40,21 @@ jobs:
           EOF
           export OPENSSL_CONF=/tmp/custom_openssl.cnf
           
-          # 2. الانتقال إلى ذاكرة الـ RAM للسرعة القصوى
-          mkdir -p /dev/shm/workspace
-          cd /dev/shm/workspace
-          
-          # 3. تحديد الروابط
+          # 2. تحديد الروابط 
           if [[ "$APP_NAME" == "ESign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Esign.ipa"; ICON_NAME="IMG_1419.jpeg";
           elif [[ "$APP_NAME" == "KSign" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
           elif [[ "$APP_NAME" == "Feather" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
           elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
           elif [[ "$APP_NAME" == "GBox" ]]; then IPA_URL="https://github.com/ipa-black/Signer/releases/download/V1/GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
 
-          # 4. تحميل ZSign وتطبيق الـ IPA بالتوازي (إجبار IPv4 لمنع أخطاء الشبكة 22)
-          wget -4 -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz & PID_ZSIGN=$!
-          curl -4 -sL --fail -o raw_app.ipa "$IPA_URL" & PID_IPA=$!
-
-          # 5. جلب الأيقونة محلياً وتجهيز الشهادات
+          # 3. التحميل المتسلسل والآمن (لمنع حظر جيت هاب عند الضغط العالي)
+          wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
+          curl -sL --fail -o raw_app.ipa "$IPA_URL"
+          
+          chmod +x zsign
           cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
           
+          # 4. تجهيز الشهادات بأمان تام
           if [[ "$USE_FREE_CERT" == "true" ]]; then
             cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
             cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
@@ -68,13 +65,7 @@ jobs:
             CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r')
           fi
 
-          # 6. انتظار انتهاء التحميلات
-          wait $PID_ZSIGN
-          wait $PID_IPA
-          
-          chmod +x zsign
-
-          # 7. الحقن الجراحي السريع (صفر ثانية فك ضغط!)
+          # 5. الحقن الجراحي (للحفاظ على سرعة التوقيع بدون فك الضغط)
           APP_DIR=$(unzip -Z1 raw_app.ipa | grep -o '^Payload/[^/]*.app/' | head -n 1)
           unzip -qq raw_app.ipa "${APP_DIR}Info.plist"
           mv downloaded_icon.png "${APP_DIR}CustomIpaBlackIcon.png"
@@ -106,11 +97,11 @@ jobs:
             echo "$CERT_PASSWORD" > "${APP_DIR}signing-assets/PremiumCert/cert.txt"
           fi
 
-          # تحديث الـ IPA بالملفات الجديدة فقط (0.1 ثانية)
+          # 6. تحديث الـ IPA
           zip -q0ur raw_app.ipa Payload
 
-          # 8. التوقيع الصامت داخل الـ RAM 
+          # 7. التوقيع الصامت
           ./zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" raw_app.ipa
 
-          # 9. الرفع الصاروخي المباشر
+          # 8. الرفع المستقر
           gh release create "build-${BUILD_ID}" "${APP_NAME}_signed.ipa" "bundle_id.txt" -t "Cloud Build ${BUILD_ID}" -R ${{ github.repository }}
