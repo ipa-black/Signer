@@ -1,4 +1,4 @@
-name: Premium Cloud Signer Engine
+name: Premium Cloud Signer Engine (Ultra Fast)
 
 on:
   repository_dispatch:
@@ -8,12 +8,16 @@ jobs:
   build_and_sign:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout Repository
+      - name: ⚡ Fast Checkout
         uses: actions/checkout@v4
         with:
           show-progress: false
+          fetch-depth: 1
+          sparse-checkout: |
+            icons
+            cert
 
-      - name: 🛡️ Ultimate Production Sign (Anti-Error 22)
+      - name: 🚀 Ultra Fast Production Sign
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
           USE_FREE_CERT: ${{ github.event.client_payload.use_free_cert }}
@@ -25,63 +29,60 @@ jobs:
         run: |
           set -euo pipefail
           
-          # 1. تحديد الأسماء (تأكد أن أسماء KSign وغيرها تطابق المرفوع عندك تماماً)
+          # 1. تحديد الأسماء
           if [[ "$APP_NAME" == "ESign" ]]; then IPA_NAME="esign_5.0.2_unsigned.ipa"; ICON_NAME="IMG_1419.jpeg";
           elif [[ "$APP_NAME" == "KSign" ]]; then IPA_NAME="Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
           elif [[ "$APP_NAME" == "Feather" ]]; then IPA_NAME="Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
           elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_NAME="Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
           elif [[ "$APP_NAME" == "GBox" ]]; then IPA_NAME="GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
 
-          # 2. تحميل أداة التوقيع وجلب الأيقونة
-          wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
-          chmod +x zsign
-          cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
+          # 2. تنفيذ المهام بالتوازي لأقصى سرعة (Parallel Execution)
+          (
+            wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
+            chmod +x zsign
+          ) &
           
-          # 3. التحميل عبر أداة جيت هاب الرسمية بصلاحيات التوكن (الحل الجذري للخطأ 22)
-          echo "Downloading $IPA_NAME from Release V1..."
-          gh release download V1 -p "$IPA_NAME" --repo ${{ github.repository }} || { 
-            echo "❌ فشل التحميل! الملف '$IPA_NAME' غير موجود في قسم Releases (V1) بهذا الاسم."
-            echo "الملفات المتوفرة حالياً في السيرفر هي:"
-            gh release view V1 --repo ${{ github.repository }} --json assets --jq '.assets[].name'
-            exit 1
-          }
-          mv "$IPA_NAME" raw_app.ipa
+          (
+            gh release download V1 -p "$IPA_NAME" --repo ${{ github.repository }} > /dev/null 2>&1
+            mv "$IPA_NAME" raw_app.ipa
+          ) &
+          
+          (
+            cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
+            if [[ "$USE_FREE_CERT" == "true" ]]; then
+              cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
+              cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
+            else
+              echo "$P12_BASE64" | tr -d ' \n\r' | base64 -d > cert.p12
+              echo "$PROV_BASE64" | tr -d ' \n\r' | base64 -d > profile.mobileprovision
+            fi
+          ) &
+          
+          # انتظار انتهاء جميع المهام المتوازية (لن يستغرق سوى ثوانٍ معدودة)
+          wait
 
-          # 4. تنظيف وتجهيز الشهادات وكلمة المرور
-          if [[ "$USE_FREE_CERT" == "true" ]]; then
-            cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
-            cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
-            CERT_PASSWORD=$(cat "$GITHUB_WORKSPACE/cert/pass.txt" | tr -d '\n\r')
-          else
-            echo "$P12_BASE64" | tr -d ' \n\r' | base64 -d > cert.p12
-            echo "$PROV_BASE64" | tr -d ' \n\r' | base64 -d > profile.mobileprovision
-            CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r')
-          fi
+          # استخراج كلمة المرور
+          if [[ "$USE_FREE_CERT" == "true" ]]; then CERT_PASSWORD=$(cat "$GITHUB_WORKSPACE/cert/pass.txt" | tr -d '\n\r');
+          else CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r'); fi
 
-          # 5. الحقن الجراحي (تحديث Info.plist بدون فك ضغط كامل للحفاظ على السرعة)
-          APP_DIR=$(unzip -Z1 raw_app.ipa | grep -o '^Payload/[^/]*.app/' | head -n 1)
+          # 3. الحقن السريع جداً 
+          APP_DIR=$(unzip -Z1 raw_app.ipa | grep -m1 '^Payload/[^/]*.app/')
           unzip -qq raw_app.ipa "${APP_DIR}Info.plist"
           mv downloaded_icon.png "${APP_DIR}CustomIpaBlackIcon.png"
 
+          # 4. بايثون محسّن ولحظي
           python3 -c '
-          import plistlib, glob, os
-          app_name = os.environ.get("APP_NAME", "unknown")
-          app_dirs = glob.glob("Payload/*.app")
-          if app_dirs:
-              app_dir = app_dirs[0]
-              plist_path = os.path.join(app_dir, "Info.plist")
-              try:
-                  with open(plist_path, "rb") as f: pl = plistlib.load(f)
-                  bundle_id = pl.get("CFBundleIdentifier", f"com.ipablack.{app_name}")
-                  print(bundle_id)
-                  pl["CFBundleIcons"] = {"CFBundlePrimaryIcon": {"CFBundleIconFiles": ["CustomIpaBlackIcon"], "UIPrerenderedIcon": True}}
-                  if "CFBundleIcons~ipad" in pl: pl["CFBundleIcons~ipad"] = pl["CFBundleIcons"]
-                  with open(plist_path, "wb") as f: plistlib.dump(pl, f)
-              except:
-                  print(f"com.ipablack.{app_name}")
-          else:
-              print(f"com.ipablack.{app_name}")
-          ' > bundle_id.txt
+          import plistlib, sys
+          app_name, app_dir = sys.argv[1], sys.argv[2]
+          plist_path = f"{app_dir}Info.plist"
+          try:
+              with open(plist_path, "rb") as f: pl = plistlib.load(f)
+              print(pl.get("CFBundleIdentifier", f"com.ipablack.{app_name}"))
+              pl["CFBundleIcons"] = {"CFBundlePrimaryIcon": {"CFBundleIconFiles": ["CustomIpaBlackIcon"], "UIPrerenderedIcon": True}}
+              if "CFBundleIcons~ipad" in pl: pl["CFBundleIcons~ipad"] = pl["CFBundleIcons"]
+              with open(plist_path, "wb") as f: plistlib.dump(pl, f)
+          except: print(f"com.ipablack.{app_name}")
+          ' "$APP_NAME" "$APP_DIR" > bundle_id.txt
 
           if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
             mkdir -p "${APP_DIR}signing-assets/PremiumCert"
@@ -90,9 +91,9 @@ jobs:
             echo "$CERT_PASSWORD" > "${APP_DIR}signing-assets/PremiumCert/cert.txt"
           fi
 
-          # 6. إغلاق التطبيق والتوقيع
+          # 5. التجميع السريع (Compression 0) والتوقيع
           zip -q0ur raw_app.ipa Payload
           ./zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" raw_app.ipa
 
-          # 7. الرفع النهائي إلى GitHub Releases
+          # 6. الرفع النهائي
           gh release create "build-${BUILD_ID}" "${APP_NAME}_signed.ipa" "bundle_id.txt" -t "Cloud Build ${BUILD_ID}" -R ${{ github.repository }}
