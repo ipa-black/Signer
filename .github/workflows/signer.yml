@@ -17,7 +17,52 @@ jobs:
             icons
             cert
 
-      - name: 🚀 Ultra Fast Production Sign
+      - name: ⚙️ Set App Variables
+        id: vars
+        env:
+          APP_NAME: ${{ github.event.client_payload.app_name }}
+        run: |
+          if [[ "$APP_NAME" == "ESign" ]]; then 
+            echo "ipa_name=esign_5.0.2_unsigned.ipa" >> $GITHUB_OUTPUT; echo "icon_name=IMG_1419.jpeg" >> $GITHUB_OUTPUT;
+          elif [[ "$APP_NAME" == "KSign" ]]; then 
+            echo "ipa_name=Ksign.7.ipa" >> $GITHUB_OUTPUT; echo "icon_name=IMG_1416.jpeg" >> $GITHUB_OUTPUT;
+          elif [[ "$APP_NAME" == "Feather" ]]; then 
+            echo "ipa_name=Feather.ipa" >> $GITHUB_OUTPUT; echo "icon_name=IMG_1421.jpeg" >> $GITHUB_OUTPUT;
+          elif [[ "$APP_NAME" == "Scarlet" ]]; then 
+            echo "ipa_name=Scarlet.ipa" >> $GITHUB_OUTPUT; echo "icon_name=IMG_1420.jpeg" >> $GITHUB_OUTPUT;
+          elif [[ "$APP_NAME" == "GBox" ]]; then 
+            echo "ipa_name=GBox_v5.7.6.ipa" >> $GITHUB_OUTPUT; echo "icon_name=IMG_1417.jpeg" >> $GITHUB_OUTPUT; 
+          fi
+
+      - name: 📦 Cache zsign Tool
+        id: cache-zsign
+        uses: actions/cache@v4
+        with:
+          path: ./zsign
+          key: zsign-linux-x86_64-v1.0.4
+
+      - name: ⬇️ Download zsign (If Not Cached)
+        if: steps.cache-zsign.outputs.cache-hit != 'true'
+        run: |
+          wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
+          chmod +x zsign
+
+      - name: 📦 Cache Base IPA
+        id: cache-ipa
+        uses: actions/cache@v4
+        with:
+          path: ./raw_app.ipa
+          key: base-ipa-${{ steps.vars.outputs.ipa_name }}
+
+      - name: ⬇️ Download Base IPA (If Not Cached)
+        if: steps.cache-ipa.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download V1 -p "${{ steps.vars.outputs.ipa_name }}" --repo ${{ github.repository }} > /dev/null 2>&1
+          mv "${{ steps.vars.outputs.ipa_name }}" raw_app.ipa
+
+      - name: 🚀 Ultra Fast Preparation & Sign
         env:
           APP_NAME: ${{ github.event.client_payload.app_name }}
           USE_FREE_CERT: ${{ github.event.client_payload.use_free_cert }}
@@ -25,11 +70,12 @@ jobs:
           PROV_BASE64: ${{ github.event.client_payload.prov_base64 }}
           CUSTOM_PASSWORD: ${{ github.event.client_payload.password }}
           BUILD_ID: ${{ github.event.client_payload.build_id }}
+          ICON_NAME: ${{ steps.vars.outputs.icon_name }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         run: |
           set -euo pipefail
 
-          # 1. تخطي حماية الشهادات لـ Ubuntu-latest (OpenSSL 3 Bypass)
+          # 1. تخطي حماية الشهادات (OpenSSL 3 Bypass)
           cat << 'EOF' > /tmp/custom_openssl.cnf
           openssl_conf = openssl_init
           [openssl_init]
@@ -44,48 +90,25 @@ jobs:
           EOF
           export OPENSSL_CONF=/tmp/custom_openssl.cnf
           
-          # 2. تحديد الأسماء
-          if [[ "$APP_NAME" == "ESign" ]]; then IPA_NAME="esign_5.0.2_unsigned.ipa"; ICON_NAME="IMG_1419.jpeg";
-          elif [[ "$APP_NAME" == "KSign" ]]; then IPA_NAME="Ksign.7.ipa"; ICON_NAME="IMG_1416.jpeg";
-          elif [[ "$APP_NAME" == "Feather" ]]; then IPA_NAME="Feather.ipa"; ICON_NAME="IMG_1421.jpeg";
-          elif [[ "$APP_NAME" == "Scarlet" ]]; then IPA_NAME="Scarlet.ipa"; ICON_NAME="IMG_1420.jpeg";
-          elif [[ "$APP_NAME" == "GBox" ]]; then IPA_NAME="GBox_v5.7.6.ipa"; ICON_NAME="IMG_1417.jpeg"; fi
-
-          # 3. تنفيذ المهام بالتوازي لأقصى سرعة (Parallel Execution)
-          (
-            wget -qO- https://github.com/zhlynn/zsign/releases/download/v1.0.4/zsign-linux-x86_64.tar.gz | tar -xz
-            chmod +x zsign
-          ) &
+          # 2. تجهيز الأيقونة والشهادات في الذاكرة السريعة
+          cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
           
-          (
-            gh release download V1 -p "$IPA_NAME" --repo ${{ github.repository }} > /dev/null 2>&1
-            mv "$IPA_NAME" raw_app.ipa
-          ) &
-          
-          (
-            cp "$GITHUB_WORKSPACE/icons/$ICON_NAME" downloaded_icon.png
-            if [[ "$USE_FREE_CERT" == "true" ]]; then
-              cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
-              cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
-            else
-              echo "$P12_BASE64" | tr -d ' \n\r' | base64 -d > cert.p12
-              echo "$PROV_BASE64" | tr -d ' \n\r' | base64 -d > profile.mobileprovision
-            fi
-          ) &
-          
-          # انتظار انتهاء جميع المهام المتوازية (لن يستغرق سوى ثوانٍ معدودة)
-          wait
+          if [[ "$USE_FREE_CERT" == "true" ]]; then
+            cp "$GITHUB_WORKSPACE/cert/cert.p12" ./cert.p12
+            cp "$GITHUB_WORKSPACE/cert/profile.mobileprovision" ./profile.mobileprovision
+            CERT_PASSWORD=$(cat "$GITHUB_WORKSPACE/cert/pass.txt" | tr -d '\n\r')
+          else
+            echo "$P12_BASE64" | tr -d ' \n\r' | base64 -d > cert.p12
+            echo "$PROV_BASE64" | tr -d ' \n\r' | base64 -d > profile.mobileprovision
+            CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r')
+          fi
 
-          # استخراج كلمة المرور
-          if [[ "$USE_FREE_CERT" == "true" ]]; then CERT_PASSWORD=$(cat "$GITHUB_WORKSPACE/cert/pass.txt" | tr -d '\n\r');
-          else CERT_PASSWORD=$(echo "$CUSTOM_PASSWORD" | tr -d '\n\r'); fi
-
-          # 4. الحقن السريع جداً 
+          # 3. الحقن السريع جداً
           APP_DIR=$(unzip -Z1 raw_app.ipa | grep -m1 '^Payload/[^/]*.app/')
           unzip -qq raw_app.ipa "${APP_DIR}Info.plist"
           mv downloaded_icon.png "${APP_DIR}CustomIpaBlackIcon.png"
 
-          # 5. بايثون محسّن ولحظي
+          # 4. بايثون محسّن ولحظي للتعديل على Plist
           python3 -c '
           import plistlib, sys
           app_name, app_dir = sys.argv[1], sys.argv[2]
@@ -99,6 +122,7 @@ jobs:
           except: print(f"com.ipablack.{app_name}")
           ' "$APP_NAME" "$APP_DIR" > bundle_id.txt
 
+          # 5. حقن الشهادات لـ Feather و KSign
           if [[ "$APP_NAME" == "Feather" || "$APP_NAME" == "KSign" ]]; then
             mkdir -p "${APP_DIR}signing-assets/PremiumCert"
             cp cert.p12 "${APP_DIR}signing-assets/PremiumCert/cert.p12"
@@ -106,8 +130,9 @@ jobs:
             echo "$CERT_PASSWORD" > "${APP_DIR}signing-assets/PremiumCert/cert.txt"
           fi
 
-          # 6. التجميع السريع (Compression 0) والتوقيع
+          # 6. التجميع السريع جداً (بدون ضغط) ثم التوقيع
           zip -q0ur raw_app.ipa Payload
+          chmod +x zsign
           ./zsign -q -k cert.p12 -p "$CERT_PASSWORD" -m profile.mobileprovision -o "${APP_NAME}_signed.ipa" raw_app.ipa
 
           # 7. الرفع النهائي
